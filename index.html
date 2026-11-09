@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f59e0b">
+<meta name="mobile-web-app-capable" content="yes">
+<title>犬も歩けば君</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐕</text></svg>">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root{--main:#f59e0b;--main2:#d97706;--ink:#2b2118;--sub:#7c6f64;--bg:#fff8ec;--card:#fff;--line:#eadfcd;--go:#16a34a;--stop:#dc2626}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;font-family:"Hiragino Maru Gothic ProN","Yu Gothic","Meiryo",system-ui,sans-serif;color:var(--ink);background:var(--bg)}
+body{display:flex;flex-direction:column;height:100dvh;padding-top:env(safe-area-inset-top)}
+header{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--main);color:#fff;font-weight:800;font-size:19px;box-shadow:0 2px 6px rgba(0,0,0,.15);z-index:500}
+header .t{flex:1;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+header button{background:rgba(255,255,255,.25);border:0;color:#fff;font-size:18px;border-radius:10px;padding:4px 10px}
+main{flex:1;position:relative;overflow:hidden}
+.tab{position:absolute;inset:0;display:none;overflow:auto;padding:12px 12px 20px}
+.tab.active{display:block}
+#tab-map{padding:0;overflow:hidden}
+#map{position:absolute;inset:0;background:#e8e4da}
+nav{display:flex;background:#fff;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);z-index:500}
+nav button{flex:1;border:0;background:none;padding:6px 0 8px;font-size:11px;color:var(--sub);display:flex;flex-direction:column;align-items:center;gap:1px;font-family:inherit}
+nav button span{font-size:22px}
+nav button.active{color:var(--main2);font-weight:700}
+.card{background:var(--card);border-radius:16px;box-shadow:0 2px 10px rgba(80,50,0,.12);padding:12px}
+.daybar{position:absolute;top:10px;left:10px;right:10px;z-index:450;display:flex;align-items:center;gap:6px;padding:6px 8px}
+.daybar b{font-size:16px}
+.daybar .tot{margin-left:auto;font-weight:800;color:var(--main2);font-size:16px}
+.iconbtn{border:0;background:#fdf0d8;border-radius:10px;font-size:16px;padding:6px 10px;color:var(--ink);font-family:inherit}
+.fab{position:absolute;right:12px;z-index:450;width:46px;height:46px;border-radius:50%;border:0;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.25);font-size:20px}
+#locBtn{top:66px;width:auto;height:auto;border-radius:999px;padding:12px 20px 12px 16px;background:#2563eb;color:#fff;font-size:18px;font-weight:800;font-family:inherit;display:flex;align-items:center;gap:6px;border:3px solid #fff;box-shadow:0 3px 12px rgba(37,99,235,.45)}
+#locBtn .ic{font-size:26px;line-height:1}
+#locBtn:active{transform:scale(.95);background:#1d4ed8}
+#layerBtn{top:118px}
+.panel{position:absolute;left:10px;right:10px;bottom:10px;z-index:450}
+.lbl{font-size:12px;color:var(--sub);margin:0 0 6px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:2px solid var(--line);background:#fff;border-radius:999px;padding:5px 11px;font-size:14px;font-family:inherit;color:var(--ink)}
+.chip.on{border-color:var(--c,#f59e0b);background:color-mix(in srgb,var(--c,#f59e0b) 15%,#fff);font-weight:700}
+.row{display:flex;gap:8px;margin-top:8px}
+.btn{flex:1;border:0;border-radius:12px;padding:11px 8px;font-size:14px;font-weight:700;background:#fdf0d8;color:var(--ink);font-family:inherit}
+.btn.big{padding:14px;font-size:17px}
+.btn.go{background:var(--go);color:#fff}
+.btn.stop{background:var(--stop);color:#fff}
+.btn.main{background:var(--main);color:#fff}
+.btn.line{background:#06c755;color:#fff}
+.btn.ghost{background:#f3eee6}
+.btn:disabled{opacity:.5}
+.recinfo{display:flex;justify-content:space-around;text-align:center}
+.recinfo small{display:block;font-size:11px;color:var(--sub)}
+.recinfo b{font-size:24px}
+.twin .btn{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:19px;padding:14px 6px;border-radius:16px}
+.twin .btn span{font-size:30px;line-height:1}
+.twin .btn:disabled{opacity:1;background:#e7e2da;color:#b2a99e}
+.status{text-align:center;font-weight:800;font-size:15px;color:var(--sub);margin-bottom:4px}
+.status.on{color:#dc2626}
+.status.on::before{content:'●';margin-right:5px;animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.15}}
+.hint{font-size:12px;color:var(--sub);margin-top:6px;text-align:center}
+.hidden{display:none!important}
+h2{font-size:17px;margin:4px 0 10px}
+h3{font-size:15px;margin:14px 0 8px}
+/* modal */
+#modal{position:fixed;inset:0;background:rgba(30,20,10,.45);z-index:2000;display:flex;align-items:flex-end;justify-content:center}
+#modal .sheet{background:#fff;width:100%;max-width:560px;max-height:88dvh;overflow:auto;border-radius:20px 20px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom))}
+.field{margin:10px 0}
+.field label{display:block;font-size:12px;color:var(--sub);margin-bottom:4px}
+.field input,.field textarea,.field select{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:9px;font-size:15px;font-family:inherit;background:#fffdf9}
+.pal{display:flex;flex-wrap:wrap;gap:8px}
+.pal button{width:32px;height:32px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1px #ccc}
+.pal button.on{box-shadow:0 0 0 3px var(--ink)}
+.walkitem{display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;background:#fffaf1;margin:6px 0;border-left:6px solid var(--c)}
+.walkitem .m{flex:1}
+.walkitem .d{font-weight:800;color:var(--main2)}
+.walkitem small{color:var(--sub)}
+/* calendar */
+.calhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.calhead b{font-size:18px}
+.calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.calgrid .wd{text-align:center;font-size:12px;color:var(--sub);padding:2px}
+.calgrid .wd:first-child{color:#dc2626}.calgrid .wd:last-child{color:#2563eb}
+.cell{min-height:58px;border-radius:10px;background:#fff;border:1.5px solid var(--line);padding:3px;font-size:12px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start}
+.cell .n{font-weight:700}
+.cell.walk{background:#fff1cc;border-color:#f8c35a}
+.cell.miss{background:#f1eef3;color:#9a93a3}
+.cell.today{outline:2.5px solid var(--main2)}
+.cell.sel{box-shadow:0 0 0 3px #3b82f6}
+.cell .p{font-size:16px;line-height:1.1}
+.cell .k{font-size:10px;font-weight:700;color:var(--main2)}
+.cell.empty{background:none;border:0}
+/* stats */
+.seg{display:flex;background:#f3eee6;border-radius:12px;padding:3px;margin-bottom:10px}
+.seg button{flex:1;border:0;background:none;border-radius:10px;padding:8px;font-weight:700;font-size:15px;font-family:inherit;color:var(--sub)}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kpi{background:#fff;border-radius:14px;padding:10px 12px;box-shadow:0 1px 6px rgba(80,50,0,.08)}
+.kpi small{color:var(--sub);font-size:12px}
+.kpi b{display:block;font-size:22px;margin-top:2px}
+.kpi b i{font-style:normal;font-size:13px;color:var(--sub);margin-left:3px;font-weight:600}
+.kpi.big{grid-column:1/3;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#fff}
+.kpi.big small{color:#fff8e6}.kpi.big b{font-size:32px}.kpi.big b i{color:#fff8e6}
+.wbar{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:14px}
+.wbar .nm{width:92px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wbar .tr{flex:1;height:14px;background:#f3eee6;border-radius:7px;overflow:hidden}
+.wbar .tr div{height:100%;border-radius:7px}
+.wbar .v{width:84px;text-align:right;font-weight:700}
+.member{display:flex;align-items:center;gap:10px;padding:10px;background:#fff;border-radius:12px;margin:6px 0;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.member .sw{width:18px;height:18px;border-radius:50%}
+.member .nm{flex:1;font-weight:700}
+.note{font-size:13px;color:var(--sub);line-height:1.6}
+#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:rgba(40,30,20,.9);color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;z-index:3000;opacity:0;transition:opacity .3s;pointer-events:none;max-width:90%;text-align:center}
+#toast.show{opacity:1}
+/* splash */
+#splash{position:fixed;inset:0;z-index:4000;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;color:#fff;transition:background .4s}
+#splash.happy{background:radial-gradient(circle at 50% 40%,#fde68a,#f59e0b 60%,#ea580c)}
+#splash.scary{background:radial-gradient(circle at 50% 35%,#7b8ba3,#3b4a63 70%)}
+#splash .big{font-size:96px;line-height:1;margin-bottom:12px}
+#splash h1{font-size:26px;margin:4px 0 6px}
+#splash p{font-size:16px;opacity:.9;margin:4px 0 22px}
+#splash{gap:0}
+#splash.happy button{background:#fff;color:#c2410c}
+#splash.scary button{background:#7c3aed;color:#fff}
+#splash.scary .big{animation:tilt 2.4s ease-in-out infinite;transform-origin:50% 90%}
+@keyframes tilt{0%,100%{transform:rotate(0)}30%{transform:rotate(-9deg)}60%{transform:rotate(4deg)}}
+#splash.happy .big{animation:bounce .9s infinite}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-16px)}}
+@keyframes shake{0%,100%{transform:translateX(0) rotate(0)}20%{transform:translateX(-6px) rotate(-6deg)}40%{transform:translateX(6px) rotate(5deg)}60%{transform:translateX(-3px)}}
+.leaflet-control-attribution{font-size:10px}
+.flagwrap{width:0!important;height:0!important;background:none;border:0}
+.flag{position:absolute;bottom:0;white-space:nowrap;color:#fff;font-weight:800;font-size:14px;padding:5px 10px;border-radius:10px;border:2.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35);line-height:1.15;text-align:center}
+.flag small{display:block;font-size:11px;font-weight:700;opacity:.95}
+.flag.s{background:#16a34a;right:0;border-bottom-right-radius:0}
+.flag.g{background:#dc2626;left:0;border-bottom-left-radius:0}
+.flagdot{width:16px!important;height:16px!important;margin:-8px 0 0 -8px!important;border-radius:50%;border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+.flagdot.s{background:#16a34a}.flagdot.g{background:#dc2626}
+.startmk{background:#16a34a;color:#fff;border-radius:50%;font-size:11px;font-weight:800;text-align:center;line-height:20px;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+.goalmk{background:#dc2626;color:#fff;border-radius:50%;font-size:11px;font-weight:800;text-align:center;line-height:20px;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+.shareimg{width:100%;border-radius:12px;border:1px solid var(--line);margin:6px 0}
+pre.sharetext{white-space:pre-wrap;background:#f7f4ee;border-radius:10px;padding:10px;font-size:13px;font-family:inherit;margin:6px 0}
+/* ===== 年配の方にも見やすい大きな文字 ===== */
+body{font-size:17px}
+header{font-size:23px;padding:10px 14px}
+header button{font-size:22px;padding:6px 12px}
+nav button{font-size:15px;padding:8px 0 10px;font-weight:700}
+nav button span{font-size:28px}
+.daybar b{font-size:19px}.daybar .tot{font-size:18px}
+.iconbtn{font-size:19px;padding:8px 13px}
+.lbl{font-size:16px;font-weight:700;color:var(--ink)}
+.chip{font-size:19px;padding:8px 16px}
+.btn{font-size:18px;padding:14px 10px}
+.twin .btn{font-size:24px;padding:16px 6px}
+.twin .btn span{font-size:38px}
+.status{font-size:19px}
+.recinfo small{font-size:15px}.recinfo b{font-size:34px}
+.hint{font-size:15px}
+h2{font-size:22px}h3{font-size:19px}
+.field label{font-size:16px}
+.field input,.field textarea,.field select{font-size:19px;padding:11px}
+.walkitem{font-size:18px}.walkitem small{font-size:15px}.walkitem .d{font-size:19px}
+.calhead b{font-size:22px}
+.calgrid .wd{font-size:16px}
+.cell{min-height:68px;font-size:16px}.cell .k{font-size:12px}.cell .p{font-size:18px}
+.seg button{font-size:20px;padding:10px}
+.kpi small{font-size:16px}.kpi b{font-size:30px}.kpi b i{font-size:16px}
+.kpi.big b{font-size:44px}
+.wbar{font-size:17px}.wbar .nm{width:115px}.wbar .v{width:105px}
+.member{font-size:18px}
+.note{font-size:16px}
+#toast{font-size:18px;padding:12px 18px}
+#locBtn{font-size:20px}
+#splash h1{font-size:30px}#splash p{font-size:19px}#splash{gap:0}
+#splash #spBtn{font-weight:900;font-family:inherit;font-size:34px;padding:22px 0;width:min(82vw,380px);border-radius:999px;letter-spacing:.1em;box-shadow:0 6px 0 rgba(0,0,0,.18),0 10px 24px rgba(0,0,0,.25);animation:pulse 1.6s ease-in-out infinite}
+#splash #spBtn:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(0,0,0,.18)}
+#splash.happy #spBtn{background:#fff;color:#c2410c;border:4px solid #fff7ed}
+#splash.scary #spBtn{background:#f59e0b;color:#fff;border:4px solid #fde68a}
+#splash #spLine{font-weight:800;font-family:inherit;border:0;border-radius:999px;font-size:20px;padding:14px 0;width:min(82vw,380px);margin-top:18px!important}
+@keyframes pulse{0%,100%{scale:1}50%{scale:1.05}}
+#muteBtn{display:flex;align-items:center;gap:4px;background:#fff;color:#c2410c;font-size:18px;font-weight:900;font-family:inherit;padding:6px 14px;border-radius:999px;border:3px solid #fff7ed;box-shadow:0 2px 6px rgba(0,0,0,.2);white-space:nowrap}
+#muteBtn span{font-size:22px;line-height:1}
+#muteBtn.off{background:#57534e;color:#fff;border-color:#a8a29e}
+.ksum{display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:6px;margin-bottom:8px}
+.ksum div{background:#fff;border-radius:14px;padding:8px 10px;box-shadow:0 1px 6px rgba(80,50,0,.08)}
+.ksum div:first-child{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#fff}
+.ksum small{display:block;font-size:14px;opacity:.85}
+.ksum b{font-size:26px;white-space:nowrap}.ksum b i{font-style:normal;font-size:14px;margin-left:2px}
+.mcal{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.mwd{text-align:center;font-size:15px;font-weight:700;padding:2px 0}
+.mcell{position:relative;border:1.5px solid var(--line);border-radius:8px;min-height:62px;background:#fff;display:flex;flex-direction:column;align-items:center;padding:2px 1px}
+.mcell.today{outline:3px solid var(--main2)}
+.mcell.future{background:#faf8f4;color:#c9c0b5}
+.mcell .mn{align-self:flex-start;font-size:13px;font-weight:800;line-height:1;margin-left:3px}
+.mcell .mk{width:34px;height:34px;margin-top:-1px}.mcell .mk svg{width:100%;height:100%}
+.mcell .mkm{font-size:11px;font-weight:800;color:var(--main2);line-height:1.1;text-align:center}
+.mcal.week .mcell{min-height:128px;padding:6px 1px}
+.mcal.week .mcell .mn{align-self:center;margin:0;font-size:14px}
+.mcal.week .mcell .mk{width:44px;height:44px;margin:10px 0 6px}
+.mcal.week .mcell .mkm{font-size:13px}
+#topBtn{display:flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(180deg,#fbbf24,#f59e0b);color:#fff;font-size:23px;font-weight:900;padding:14px 8px;border-radius:16px;border:3px solid #fff3d6;box-shadow:0 4px 0 #c2410c,0 6px 14px rgba(194,65,12,.35);text-shadow:0 1px 2px rgba(0,0,0,.25);letter-spacing:.05em}
+#topBtn span{font-size:28px;text-shadow:none}
+#topBtn:active{transform:translateY(3px);box-shadow:0 1px 0 #c2410c}
+</style>
+</head>
+<body>
+<header><span>🐕</span><span class="t">犬も歩けば君</span><button id="muteBtn" title="音楽オン/オフ">🔊</button></header>
+<main>
+  <!-- 地図・記録 -->
+  <section id="tab-map" class="tab active">
+    <div id="map"></div>
+    <div class="daybar card">
+      <button class="iconbtn" id="dayPrev">◀</button>
+      <b id="dayLabel"></b>
+      <button class="iconbtn" id="dayNext">▶</button>
+      <span class="tot" id="dayTotal"></span>
+    </div>
+    <button class="fab" id="locBtn" title="現在地へ移動"><span class="ic">📍</span>現在地へ</button>
+    <div class="panel card" id="ctrlPanel">
+      <div class="status" id="recStatus">まだ歩いていません</div>
+      <div class="recinfo hidden" id="liveInfo">
+        <div><small>時間</small><b id="recTime">0:00</b></div>
+        <div><small>距離</small><b id="recDist">0 m</b></div>
+        <b id="recGps" class="hidden"></b>
+      </div>
+      <div class="row twin">
+        <button class="btn go" id="startBtn"><span>▶</span>散歩スタート</button>
+        <button class="btn stop" id="stopBtn" disabled><span>■</span>散歩おわり</button>
+      </div>
+      <div class="row"><button class="btn" id="topBtn"><span>🏠</span>トップに戻る</button></div>
+      <div id="idleBox">
+        <div class="lbl" style="margin-top:12px">だれと歩く？</div>
+        <div class="chips" id="walkerChips"></div>
+        <div class="row">
+          <button class="btn" id="drawBtn">✏️ 手で描く</button>
+          <button class="btn" id="dayListBtn">📋 記録を見る</button>
+        </div>
+        <div class="row hidden" id="lineRow"><button class="btn line big" id="topLine">💬 今日の散歩をLINEで送る</button></div>
+      </div>
+      <div id="gpsBox" class="hidden">
+        <div class="row"><button class="btn" id="pauseBtn">⏸ 一時停止</button></div>
+        <div class="hint">画面はつけたままで歩いてね</div>
+      </div>
+    </div>
+    <div class="panel card hidden" id="recPanel">
+      <div class="recinfo">
+        <div><small>距離</small><b id="drawDist">0 m</b></div>
+        <div><small>点の数</small><b id="drawCnt">0</b></div>
+      </div>
+      <div class="row" id="recBtnsDraw">
+        <button class="btn" id="undoBtn">↩ 戻す</button>
+        <button class="btn ghost" id="drawCancelBtn">✕ やめる</button>
+        <button class="btn go" id="drawDoneBtn">✔ 完了</button>
+      </div>
+      <div class="hint" id="drawHint"></div>
+    </div>
+  </section>
+
+  <!-- カレンダー -->
+  <section id="tab-cal" class="tab"><div id="calBox"></div><div id="calDay"></div></section>
+
+  <!-- 集計 -->
+  <section id="tab-stat" class="tab"><div id="statBox"></div></section>
+
+  <!-- 設定 -->
+  <section id="tab-set" class="tab"><div id="setBox"></div></section>
+</main>
+<nav>
+  <button data-tab="map" class="active"><span>🗺️</span>さんぽ</button>
+  <button data-tab="cal"><span>📅</span>カレンダー</button>
+  <button data-tab="stat"><span>📊</span>集計</button>
+  <button data-tab="set"><span>⚙️</span>設定</button>
+</nav>
+
+<div id="modal" class="hidden"><div class="sheet" id="modalBody"></div></div>
+<div id="splash" class="hidden"></div>
+<div id="toast"></div>
+
+<script>
+'use strict';
+/* =========================================================
+   犬も歩けば君  ― 散歩記録アプリ（1ファイル完結）
+   データはこの端末のブラウザ(localStorage)に保存されます
+   ========================================================= */
+const KEY='inumoarukeba_v1', RECKEY='inumoarukeba_rec';
+const ROUTE_COLOR='#e60012'; // 散歩コースの線の色（赤）
+const PALETTE=['#ef4444','#f97316','#eab308','#22c55e','#14b8a6','#06b6d4','#3b82f6','#8b5cf6','#ec4899','#a16207','#475569'];
+const EMOJIS=['🐕','🐶','🐩','🦮','🐕‍🦺','🐾','🚶','🚶‍♀️','🧑','👩','👨','👧','👦','👴','👵','🐈'];
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ---------- データ ---------- */
+function defaultData(){return{
+  walkers:[{id:'w1',name:'わんこ',type:'dog',color:'#f97316',emoji:'🐕'},{id:'w2',name:'わたし',type:'person',color:'#3b82f6',emoji:'🚶'}],
+  walks:[],
+  settings:{music:true,vol:0.6,splash:true,tile:'pale',lastWalkers:['w1','w2']}
+};}
+function load(){
+  try{const s=localStorage.getItem(KEY);if(s){const d=JSON.parse(s);
+    d.walkers=d.walkers||[];d.walks=d.walks||[];
+    d.settings=Object.assign(defaultData().settings,d.settings||{});return d;}}catch(e){}
+  return defaultData();
+}
+let D=load();
+function save(){try{localStorage.setItem(KEY,JSON.stringify(D));}catch(e){toast('保存できませんでした（容量不足かも）。バックアップを保存してください');}}
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+
+/* ---------- 日付・距離 ---------- */
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const parseYmd=s=>{const[a,b,c]=s.split('-').map(Number);return new Date(a,b-1,c);};
+const todayStr=()=>ymd(new Date());
+const WD='日月火水木金土';
+const jpDate=s=>{const d=parseYmd(s);return `${d.getMonth()+1}/${d.getDate()}(${WD[d.getDay()]})`;};
+const jpDateY=s=>{const d=parseYmd(s);return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}(${WD[d.getDay()]})`;};
+const addDays=(s,n)=>{const d=parseYmd(s);d.setDate(d.getDate()+n);return ymd(d);};
+const hm=ts=>{const d=new Date(ts);return `${pad(d.getHours())}:${pad(d.getMinutes())}`;};
+const fmtDist=m=>m>=1000?(m/1000).toFixed(2)+' km':Math.round(m)+' m';
+const km=m=>(m/1000).toFixed(2);
+function fmtDur(ms){const s=Math.max(0,Math.round(ms/1000));const h=Math.floor(s/3600),mi=Math.floor(s%3600/60);return h?`${h}時間${mi}分`:`${mi}分`;}
+function clock(ms){const s=Math.max(0,Math.floor(ms/1000));const h=Math.floor(s/3600),mi=Math.floor(s%3600/60),se=s%60;return h?`${h}:${pad(mi)}:${pad(se)}`:`${mi}:${pad(se)}`;}
+function hav(a,b){const R=6371008.8,r=Math.PI/180,dLa=(b[0]-a[0])*r,dLo=(b[1]-a[1])*r;
+  const x=Math.sin(dLa/2)**2+Math.cos(a[0]*r)*Math.cos(b[0]*r)*Math.sin(dLo/2)**2;return 2*R*Math.asin(Math.min(1,Math.sqrt(x)));}
+function segsDist(segs){let t=0;for(const s of segs)for(let i=1;i<s.length;i++)t+=hav(s[i-1],s[i]);return t;}
+const slot=ts=>{const h=new Date(ts).getHours();return h<5?'夜':h<10?'朝':h<15?'昼':h<19?'夕':'夜';};
+
+const walksOn=s=>D.walks.filter(w=>w.date===s).sort((a,b)=>a.start-b.start);
+const walksIn=(a,b)=>D.walks.filter(w=>w.date>=a&&w.date<=b);
+const sumDist=ws=>ws.reduce((t,w)=>t+(w.dist||0),0);
+const sumDur=ws=>ws.reduce((t,w)=>t+Math.max(0,(w.end||w.start)-w.start),0);
+const walkerById=id=>D.walkers.find(w=>w.id===id);
+const wName=id=>{const w=walkerById(id);return w?`${w.emoji}${w.name}`:'（削除済み）';};
+const walkedDays=()=>new Set(D.walks.map(w=>w.date));
+
+function streaks(){
+  const set=walkedDays();let cur=0,d=todayStr();
+  if(!set.has(d))d=addDays(d,-1);
+  while(set.has(d)){cur++;d=addDays(d,-1);}
+  let max=0,run=0,prev=null;
+  for(const s of [...set].sort()){run=(prev&&addDays(prev,1)===s)?run+1:1;max=Math.max(max,run);prev=s;}
+  return{cur,max,today:set.has(todayStr())};
+}
+
+/* ---------- 共通UI ---------- */
+let toastT;
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2600);}
+function openModal(html){$('#modalBody').innerHTML=html;$('#modal').classList.remove('hidden');}
+function closeModal(){$('#modal').classList.add('hidden');$('#modalBody').innerHTML='';}
+$('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal();});
+
+/* ---------- 音楽（Web Audioで自作・著作権なし） ---------- */
+let actx=null,master=null,playing=[];
+const NOTE={};(()=>{const n=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];for(let o=0;o<9;o++)n.forEach((k,i)=>{NOTE[k+o]=440*Math.pow(2,((o+1)*12+i-69)/12);});})();
+function ac(){
+  if(!actx){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;actx=new C();master=actx.createGain();master.connect(actx.destination);}
+  if(actx.state==='suspended')actx.resume();
+  master.gain.value=D.settings.vol;return actx;
+}
+function stopMusic(){playing.forEach(o=>{try{o.stop();}catch(e){}});playing=[];}
+function note(f,t,d,type='triangle',v=.25,dest){
+  const o=actx.createOscillator(),g=actx.createGain();o.type=type;o.frequency.setValueAtTime(f,t);
+  g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(v,t+0.02);g.gain.exponentialRampToValueAtTime(0.0001,t+d);
+  o.connect(g);g.connect(dest||master);o.start(t);o.stop(t+d+0.05);playing.push(o);return o;
+}
+function seq(str,t0,beat,type,v){let t=t0;for(const tok of str.trim().split(/\s+/)){const[n,l]=tok.split(':');const len=parseFloat(l||1)*beat;if(n!=='-')note(NOTE[n],t,len*0.92,type,v);t+=len;}return t;}
+function noise(t,len,freq,v,type='highpass'){
+  const b=actx.createBuffer(1,Math.floor(actx.sampleRate*len),actx.sampleRate),d=b.getChannelData(0);
+  for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);
+  const s=actx.createBufferSource();s.buffer=b;const f=actx.createBiquadFilter();f.type=type;f.frequency.value=freq;
+  const g=actx.createGain();g.gain.value=v;s.connect(f);f.connect(g);g.connect(master);s.start(t);playing.push(s);
+}
+function bark(t){
+  const o=actx.createOscillator(),g=actx.createGain(),f=actx.createBiquadFilter();f.type='bandpass';f.frequency.value=900;f.Q.value=1.2;
+  o.type='sawtooth';o.frequency.setValueAtTime(720,t);o.frequency.exponentialRampToValueAtTime(330,t+0.16);
+  g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(0.6,t+0.015);g.gain.exponentialRampToValueAtTime(0.0001,t+0.18);
+  o.connect(f);f.connect(g);g.connect(master);o.start(t);o.stop(t+0.2);playing.push(o);
+}
+function playHappy(force){
+  if(!D.settings.music&&!force)return;const a=ac();if(!a)return;stopMusic();
+  const t=a.currentTime+0.05,b=0.17;
+  seq('C5 E5 G5 E5  C6:2 G5:2  F5 A5 C6 A5  G5:3 -:1  E5 G5 C6 E6  D6 C6 B5 A5  G5 B5 D6 B5  C6:3 -:1',t,b,'square',0.09);
+  seq('C3:2 G3:2 C3:2 G3:2 F3:2 C4:2 G3:2 D4:2 C3:2 G3:2 F3:2 A3:2 G3:2 B3:2 C3:4',t,b,'triangle',0.32);
+  for(let i=0;i<32;i++){if(i%2)noise(t+i*b,0.04,7000,0.12);else if(i%4===0)noise(t+i*b,0.09,180,0.35,'lowpass');}
+  bark(t+32*b+0.05);bark(t+32*b+0.32);
+}
+function thump(t){const o=actx.createOscillator(),g=actx.createGain();o.type='sine';o.frequency.setValueAtTime(95,t);o.frequency.exponentialRampToValueAtTime(40,t+0.15);
+  g.gain.setValueAtTime(0.55,t);g.gain.exponentialRampToValueAtTime(0.0001,t+0.26);o.connect(g);g.connect(master);o.start(t);o.stop(t+0.3);playing.push(o);}
+// 残念で悲しい音楽（「ワ・ワ・ワ・ワ〜ン」＋短調のさみしいメロディ）
+function sadHorn(f,t,d,vib){
+  const o=actx.createOscillator(),g=actx.createGain(),lp=actx.createBiquadFilter();
+  o.type='sawtooth';o.frequency.setValueAtTime(f,t);lp.type='lowpass';lp.frequency.setValueAtTime(700,t);lp.frequency.linearRampToValueAtTime(1300,t+0.12);lp.frequency.linearRampToValueAtTime(500,t+d);
+  g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(0.22,t+0.06);g.gain.setValueAtTime(0.2,t+d*0.7);g.gain.exponentialRampToValueAtTime(0.0001,t+d);
+  if(vib){const l=actx.createOscillator(),lg=actx.createGain();l.frequency.value=5;lg.gain.setValueAtTime(0,t);lg.gain.linearRampToValueAtTime(f*0.035,t+0.4);l.connect(lg);lg.connect(o.frequency);l.start(t);l.stop(t+d);playing.push(l);}
+  o.connect(lp);lp.connect(g);g.connect(master);o.start(t);o.stop(t+d+0.05);playing.push(o);
+}
+function padTone(f,t,d,v){const o=actx.createOscillator(),g=actx.createGain();o.type='triangle';o.frequency.value=f;
+  g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(v,t+0.5);g.gain.setValueAtTime(v,t+d-0.4);g.gain.linearRampToValueAtTime(0.0001,t+d);
+  o.connect(g);g.connect(master);o.start(t);o.stop(t+d+0.05);playing.push(o);}
+function playScary(force){
+  if(!D.settings.music&&!force)return;const a=ac();if(!a)return;stopMusic();
+  const t=a.currentTime+0.05;
+  sadHorn(NOTE.G3,t,0.42);sadHorn(NOTE['F#3'],t+0.48,0.42);sadHorn(NOTE.F3,t+0.96,0.42);sadHorn(NOTE.E3,t+1.44,1.7,true);
+  const t2=t+3.4,b=0.36;
+  seq('E5:2 D5 C5 B4:2 A4:2 C5 B4 A4 G#4:2 A4:4',t2,b,'sine',0.22);
+  seq('-:4 E4:2 -:2 E4:2 -:2 C4:4',t2,b,'sine',0.06);
+  [[['A3','C4','E4'],0,4],[['F3','A3','C4'],4,4],[['E3','G#3','B3'],8,4],[['A3','C4','E4'],12,5]].forEach(([ns,st,len])=>ns.forEach(n=>padTone(NOTE[n],t2+st*b,len*b,0.05)));
+}
+function updMuteBtn(){const on=D.settings.music,b=$('#muteBtn');b.innerHTML=on?'<span>🔊</span>音あり':'<span>🔇</span>音なし';b.classList.toggle('off',!on);b.setAttribute('aria-pressed',on);}
+$('#muteBtn').onclick=()=>{D.settings.music=!D.settings.music;save();updMuteBtn();if(!D.settings.music)stopMusic();toast(D.settings.music?'音楽オン':'音楽オフ');if(curTab==='set')renderSet();};
+
+/* ---------- かわいい子犬のイラスト（オリジナルSVG） ---------- */
+function puppySVG(happy){
+  const eyes=happy
+    ?`<path d="M62 102 q12 -14 24 0" stroke="#3b2414" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <path d="M114 102 q12 -14 24 0" stroke="#3b2414" stroke-width="6" fill="none" stroke-linecap="round"/>`
+    :`<circle cx="74" cy="100" r="13" fill="#2a1a10"/><circle cx="126" cy="100" r="13" fill="#2a1a10"/>
+      <circle cx="79" cy="94" r="5" fill="#fff"/><circle cx="131" cy="94" r="5" fill="#fff"/>
+      <circle cx="70" cy="105" r="2.5" fill="#fff"/><circle cx="122" cy="105" r="2.5" fill="#fff"/>
+      <path d="M62 82 q10 -6 20 -2" stroke="#7a4a26" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <path d="M118 80 q10 -4 20 2" stroke="#7a4a26" stroke-width="4" fill="none" stroke-linecap="round"/>`;
+  const mouth=happy
+    ?`<path d="M88 136 q12 22 24 0 z" fill="#7a2e2e"/><path d="M92 142 q8 20 16 0 z" fill="#ff7b9a"/>
+      <path d="M84 130 q8 8 16 0 q8 8 16 0" stroke="#3b2414" stroke-width="4" fill="none" stroke-linecap="round"/>`
+    :`<path d="M88 134 q6 5 12 0 q6 5 12 0" stroke="#3b2414" stroke-width="4" fill="none" stroke-linecap="round"/>`;
+  return `<svg viewBox="0 0 200 200" width="190" height="190" aria-label="子犬">
+    <ellipse cx="100" cy="186" rx="58" ry="9" fill="rgba(0,0,0,.18)"/>
+    <ellipse cx="100" cy="168" rx="48" ry="24" fill="#f3d2a2"/>
+    <ellipse cx="38" cy="92" rx="22" ry="40" fill="#a8693a" transform="rotate(20 38 92)"/>
+    <ellipse cx="162" cy="92" rx="22" ry="40" fill="#a8693a" transform="rotate(-20 162 92)"/>
+    <circle cx="100" cy="106" r="64" fill="#f7ddb4"/>
+    <ellipse cx="128" cy="96" rx="24" ry="22" fill="#e6b47a"/>
+    <ellipse cx="100" cy="128" rx="30" ry="22" fill="#fff4e2"/>
+    ${eyes}
+    <ellipse cx="100" cy="120" rx="11" ry="8" fill="#2a1a10"/><ellipse cx="97" cy="117" rx="3.5" ry="2" fill="#fff" opacity=".7"/>
+    <line x1="100" y1="127" x2="100" y2="132" stroke="#3b2414" stroke-width="4" stroke-linecap="round"/>
+    ${mouth}
+    <circle cx="58" cy="124" r="9" fill="#ff9fb3" opacity=".6"/><circle cx="142" cy="124" r="9" fill="#ff9fb3" opacity=".6"/>
+    <path d="M60 160 q40 14 80 0" stroke="#e0483e" stroke-width="9" fill="none" stroke-linecap="round"/>
+    <circle cx="100" cy="172" r="8" fill="#ffd23f" stroke="#c99a00" stroke-width="2"/>
+    ${happy?'<text x="150" y="44" font-size="26">♪</text><text x="30" y="40" font-size="20">♪</text>':'<text x="146" y="46" font-size="26" fill="#cfe3ff">?</text>'}
+  </svg>`;
+}
+
+/* ---------- 起動時の判定画面 ---------- */
+function showSplash(force){
+  if(!D.settings.splash&&!force)return;
+  const st=streaks(),done=st.today,sp=$('#splash');
+  const n=walksOn(todayStr()),dist=sumDist(n);
+  sp.className=done?'happy':'scary';
+  sp.innerHTML=done
+    ?`<div class="big">${puppySVG(true)}</div><h1>よく歩いたね！</h1><p>今日 ${fmtDist(dist)}（${n.length}回）${st.cur>1?`<br>🔥 連続 ${st.cur}日目！`:''}</p><button id="spBtn">ひらく ▶</button><button id="spLine" style="margin-top:14px;background:#06c755;color:#fff">💬 今日の散歩をLINEで送る</button>`
+    :`<div class="big">${puppySVG(false)}</div><h1>おさんぽ、いこうよ！</h1><p>${st.cur>0?`連続 ${st.cur}日。今日もいっしょに歩こう`:'少し歩けば、気分すっきり'}</p><button id="spBtn">ひらく ▶</button>`;
+  if($('#spLine'))$('#spLine').onclick=()=>{playHappy();sp.classList.add('hidden');shareDay(todayStr());};
+  $('#spBtn').onclick=()=>{done?playHappy():playScary();setTimeout(()=>sp.classList.add('hidden'),done?400:900);};
+}
+
+/* ---------- 地図 ---------- */
+let map,routeLayer,meMarker,meCircle,recLine,recTail,recOutline,drawMarkers,baseLayers={},curBase;
+const TILE_NAMES={pale:'地理院 淡色'};
+let viewDate=todayStr();
+function initMap(){
+  if(!window.L){$('#map').innerHTML='<p style="padding:90px 20px;text-align:center">地図を読み込めませんでした。<br>インターネット接続を確認してください。</p>';return;}
+  const gsi='<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">地理院タイル</a>';
+  baseLayers={
+    pale:L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png',{maxNativeZoom:18,maxZoom:20,attribution:gsi})
+  };
+  map=L.map('map',{zoomControl:false,attributionControl:true});
+  setBase('pale');
+  const last=[...D.walks].sort((a,b)=>b.start-a.start)[0];
+  const lp=last&&last.segs.flat().slice(-1)[0];
+  map.setView(lp||[34.4505,135.5735],lp?16:14);
+  routeLayer=L.layerGroup().addTo(map);
+  map.on('click',onMapClick);
+  map.on('dragstart',()=>{follow=false;});
+}
+function setBase(k){k='pale';if(curBase)map.removeLayer(curBase);curBase=baseLayers[k].addTo(map);D.settings.tile=k;save();}
+
+// スタート・ゴールの旗（スタートは左上、ゴールは右上に出して、同じ場所に戻る周回コースでも重ならない）
+function addFlags(layer,pts,opt){
+  const {pre='',st,en,goal=true,onClick}=opt;
+  const add=(ll,k,txt,sub)=>{
+    L.marker(ll,{icon:L.divIcon({className:'flagdot '+k,iconSize:null}),zIndexOffset:900}).addTo(layer);
+    const m=L.marker(ll,{icon:L.divIcon({className:'flagwrap',iconSize:[0,0],iconAnchor:[0,0],html:`<div class="flag ${k}">${txt}${sub?`<small>${sub}</small>`:''}</div>`}),zIndexOffset:1000}).addTo(layer);
+    if(onClick)m.on('click',onClick);
+  };
+  if(!pts.length)return;
+  add(pts[0],'s',pre+'スタート',st?hm(st):'');
+  if(goal&&pts.length>1)add(pts[pts.length-1],'g',pre+'ゴール',en?hm(en):'');
+}
+const PADL=[95,135],PADR=[95,255];
+// 下のボタン欄の高さに合わせて、コースが隠れないよう余白を自動計算
+const FIT_OPT={maxZoom:18,paddingTopLeft:PADL,get paddingBottomRight(){const pn=[...document.querySelectorAll('.panel')].find(e=>!e.classList.contains('hidden'));PADR[1]=(pn?pn.offsetHeight:230)+15;return PADR;}};
+// 旗やボタンに隠れない範囲にすべて入っているか
+function inView(bd){const sz=map.getSize();return L.latLngBounds(map.containerPointToLatLng(PADL),map.containerPointToLatLng([sz.x-PADR[0],sz.y-PADR[1]])).contains(bd);}
+function drawRoutes(ws,fit){
+  routeLayer.clearLayers();const all=[];
+  ws.forEach((w,i)=>{
+    w.segs.forEach(s=>{if(s.length<2)return;
+      L.polyline(s,{color:'#fff',weight:14,opacity:.9}).addTo(routeLayer);
+      L.polyline(s,{color:ROUTE_COLOR,weight:9,opacity:.95}).addTo(routeLayer).on('click',()=>openWalk(w.id));
+      all.push(...s);});
+    const pts=w.segs.flat();
+    if(pts.length){
+      addFlags(routeLayer,pts,{pre:ws.length>1?'①②③④⑤⑥⑦⑧⑨⑩'[i]||'':'',st:w.start,en:w.end,onClick:()=>openWalk(w.id)});
+    }
+  });
+  if(fit&&all.length)map.fitBounds(L.latLngBounds(all),FIT_OPT);
+}
+function refreshDay(fit=true){
+  const ws=walksOn(viewDate);
+  $('#dayLabel').textContent=(viewDate===todayStr()?'今日 ':'')+jpDate(viewDate);
+  $('#dayTotal').textContent=ws.length?`${fmtDist(sumDist(ws))}・${ws.length}回`:'まだ0回';
+  $('#dayNext').disabled=viewDate>=todayStr();
+  $('#lineRow').classList.toggle('hidden',!ws.length);
+  $('#topLine').textContent=`💬 ${viewDate===todayStr()?'今日':jpDate(viewDate)}の散歩をLINEで送る`;
+  if(map&&!rec)drawRoutes(ws,fit);
+}
+$('#dayPrev').onclick=()=>{viewDate=addDays(viewDate,-1);refreshDay();};
+$('#dayNext').onclick=()=>{if(viewDate<todayStr()){viewDate=addDays(viewDate,1);refreshDay();}};
+$('#dayListBtn').onclick=()=>showDayList(viewDate);
+$('#topLine').onclick=()=>shareDay(viewDate);
+$('#topBtn').onclick=()=>{stopMusic();showSplash(true);if(rec&&rec.mode==='gps')setTimeout(()=>toast('散歩の記録は続いています'),300);};
+
+function setMe(ll,acc){
+  if(!map)return;
+  if(!meMarker){meMarker=L.circleMarker(ll,{radius:8,color:'#fff',weight:3,fillColor:'#2563eb',fillOpacity:1}).addTo(map);meCircle=L.circle(ll,{radius:acc,color:'#2563eb',weight:1,fillOpacity:.1}).addTo(map);}
+  else{meMarker.setLatLng(ll);meCircle.setLatLng(ll).setRadius(acc);}
+}
+$('#locBtn').onclick=()=>{
+  if(!navigator.geolocation){toast('この端末では位置情報が使えません');return;}
+  follow=true;toast('現在地を取得中…');
+  navigator.geolocation.getCurrentPosition(p=>{const ll=[p.coords.latitude,p.coords.longitude];setMe(ll,p.coords.accuracy);map.setView(ll,Math.max(map.getZoom(),17));},
+    e=>toast('現在地を取得できません：'+geoErr(e)),{enableHighAccuracy:true,timeout:15000});
+};
+const geoErr=e=>e.code===1?'位置情報の利用が許可されていません':e.code===2?'位置を特定できません':'時間切れです';
+
+/* ---------- メンバー選択チップ ---------- */
+let selWalkers=new Set((D.settings.lastWalkers||[]).filter(id=>walkerById(id)));
+function renderChips(){
+  $('#walkerChips').innerHTML=D.walkers.map(w=>`<button class="chip ${selWalkers.has(w.id)?'on':''}" style="--c:${w.color}" data-w="${w.id}">${w.emoji} ${esc(w.name)}</button>`).join('')||'<span class="note">メンバー・設定タブで追加してください</span>';
+  $('#walkerChips').querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>{const id=b.dataset.w;selWalkers.has(id)?selWalkers.delete(id):selWalkers.add(id);D.settings.lastWalkers=[...selWalkers];save();renderChips();});
+}
+function chipEditor(sel,cls='wsel'){return `<div class="chips" id="${cls}">`+D.walkers.map(w=>`<button type="button" class="chip ${sel.includes(w.id)?'on':''}" style="--c:${w.color}" data-w="${w.id}">${w.emoji} ${esc(w.name)}</button>`).join('')+'</div>';}
+function bindChipEditor(cls='wsel'){document.querySelectorAll(`#${cls} [data-w]`).forEach(b=>b.onclick=()=>b.classList.toggle('on'));}
+const readChips=(cls='wsel')=>[...document.querySelectorAll(`#${cls} .chip.on`)].map(b=>b.dataset.w);
+function palette(cur,id='pal'){return `<div class="pal" id="${id}">`+PALETTE.map(c=>`<button type="button" data-c="${c}" class="${c===cur?'on':''}" style="background:${c}"></button>`).join('')+'</div>';}
+function bindPalette(id='pal'){document.querySelectorAll(`#${id} button`).forEach(b=>b.onclick=()=>{document.querySelectorAll(`#${id} button`).forEach(x=>x.classList.remove('on'));b.classList.add('on');});}
+const readPalette=(id='pal')=>{const b=document.querySelector(`#${id} button.on`);return b?b.dataset.c:PALETTE[0];};
+
+/* ---------- 記録（GPS／手描き） ---------- */
+let rec=null,follow=true,wl=null;
+async function wakeLock(){try{if('wakeLock' in navigator)wl=await navigator.wakeLock.request('screen');}catch(e){}}
+function releaseWake(){try{wl&&wl.release();}catch(e){}wl=null;}
+// 他のアプリから戻ってきた時：GPSを再開し、散歩の画面を表示（「散歩おわり」がすぐ押せる）
+document.addEventListener('visibilitychange',()=>{
+  if(!rec||rec.mode!=='gps')return;
+  if(document.visibilityState==='hidden'){persistRec();return;}
+  if(!rec.paused)wakeLock();watchGPS();
+  if(curTab!=='map')switchTab('map');
+  $('#splash').classList.add('hidden');updRec();
+  toast('おかえりなさい。散歩の記録は続いています');
+});
+window.addEventListener('pagehide',()=>{if(rec&&rec.mode==='gps')persistRec();});
+function persistRec(){try{if(rec)localStorage.setItem(RECKEY,JSON.stringify({...rec,watch:null,timer:null}));else localStorage.removeItem(RECKEY);}catch(e){}}
+function recColor(){return ROUTE_COLOR;}
+
+function showRecPanel(){
+  const gps=rec.mode==='gps';
+  if(gps){
+    $('#ctrlPanel').classList.remove('hidden');$('#recPanel').classList.add('hidden');
+    $('#idleBox').classList.add('hidden');$('#gpsBox').classList.remove('hidden');
+    $('#startBtn').disabled=true;$('#startBtn').innerHTML='<span>🐕</span>記録中…';$('#stopBtn').disabled=false;
+    $('#recStatus').className='status on';$('#recStatus').textContent='散歩を記録中';$('#liveInfo').classList.remove('hidden');
+  }else{
+    $('#ctrlPanel').classList.add('hidden');$('#recPanel').classList.remove('hidden');
+    $('#drawHint').textContent='地図をタップして散歩コースを順番に描いてください';
+  }
+  routeLayer.clearLayers();
+  recTail=L.polyline([],{color:recColor(),weight:7,dashArray:'8 10',opacity:.8}).addTo(map);
+  recOutline=L.polyline([],{color:'#fff',weight:14,opacity:.9}).addTo(map);
+  recLine=L.polyline([],{color:recColor(),weight:9}).addTo(map);
+  drawMarkers=L.layerGroup().addTo(map);
+  redrawRec();updRec();
+}
+function setIdleUI(){
+  $('#recPanel').classList.add('hidden');$('#ctrlPanel').classList.remove('hidden');
+  $('#idleBox').classList.remove('hidden');$('#gpsBox').classList.add('hidden');
+  $('#startBtn').disabled=false;$('#startBtn').innerHTML='<span>▶</span>散歩スタート';$('#stopBtn').disabled=true;
+  $('#recStatus').className='status';$('#recStatus').textContent='「散歩スタート」を押してね';$('#liveInfo').classList.add('hidden');
+  $('#recTime').textContent='0:00';$('#recDist').textContent='0 m';$('#recGps').textContent='-';
+}
+function hideRecPanel(){
+  setIdleUI();
+  if(map)[recLine,recTail,recOutline,drawMarkers].forEach(l=>{if(l)map.removeLayer(l);});recLine=recTail=recOutline=drawMarkers=null;
+}
+function redrawRec(){
+  if(!recLine)return;const live=rec.segs.filter(s=>s.length);recLine.setLatLngs(live);recOutline.setLatLngs(live);
+  if(rec.mode==='gps'){
+    const pts=rec.segs.flat(),last=pts[pts.length-1];
+    // 最後に記録した点から現在地まで点線でつなぎ、コースが常に見えるようにする
+    recTail.setLatLngs(last&&rec.cur?[last,rec.cur]:[]);
+    drawMarkers.clearLayers();
+    addFlags(drawMarkers,pts,{st:rec.start,goal:false});
+  }
+  if(rec.mode==='draw'){drawMarkers.clearLayers();rec.segs[0].forEach((p,i)=>L.circleMarker(p,{radius:i===0?7:4,color:'#fff',weight:2,fillColor:i===0?'#16a34a':recColor(),fillOpacity:1}).addTo(drawMarkers));}
+}
+function updRec(){
+  if(!rec)return;
+  const dist=segsDist(rec.segs);
+  if(rec.mode==='gps'){$('#recDist').textContent=fmtDist(dist);
+    const now=rec.paused?rec.pauseStart:Date.now();
+    $('#recTime').textContent=clock(now-rec.start-(rec.pausedMs||0));
+    $('#recGps').textContent=rec.acc?`±${Math.round(rec.acc)}m`:'取得中';
+  }else{$('#drawDist').textContent=fmtDist(dist);$('#drawCnt').textContent=rec.segs[0].length;}
+}
+const GPS_OPT={enableHighAccuracy:true,maximumAge:0,timeout:30000};
+function gpsErr(e){if(e.code===1)toast('GPSエラー：'+geoErr(e));else if(rec){rec.acc=0;}}
+function watchGPS(){if(!rec)return;try{if(rec.watch!=null)navigator.geolocation.clearWatch(rec.watch);}catch(e){}rec.watch=navigator.geolocation.watchPosition(onPos,gpsErr,GPS_OPT);}
+function startGPS(resume){
+  if(!navigator.geolocation){toast('この端末では位置情報が使えません');return;}
+  if(!resume){
+    const ids=[...selWalkers];if(!ids.length){toast('いっしょに歩くメンバーを選んでね');return;}
+    rec={mode:'gps',walkerIds:ids,start:Date.now(),segs:[[]],paused:false,pausedMs:0};
+    ac(); // 音の準備（タップ時に許可を得る）
+  }
+  viewDate=todayStr();refreshDay(false);follow=true;
+  watchGPS();
+  rec.timer=setInterval(updRec,1000);wakeLock();showRecPanel();persistRec();
+  $('#pauseBtn').textContent=rec.paused?'▶ 再開':'⏸ 一時停止';
+}
+function onPos(p){
+  const ll=[+p.coords.latitude.toFixed(6),+p.coords.longitude.toFixed(6)],acc=p.coords.accuracy;
+  setMe(ll,acc);if(!rec||rec.mode!=='gps')return;rec.acc=acc;rec.cur=ll;
+  if(follow){const pts=rec.segs.flat();
+    if(pts.length){const bd=L.latLngBounds([...pts,ll]);
+      // スタート地点と現在地が両方画面に入るように自動調整
+      if(!inView(bd)||map.getZoom()<15)map.fitBounds(bd,FIT_OPT);}
+    else if(map.getZoom()<16)map.setView(ll,17);else map.panTo(ll);}
+  if(rec.paused){redrawRec();return;}
+  const seg=rec.segs[rec.segs.length-1],last=seg[seg.length-1];
+  // 精度の許容範囲：最初の点や、しばらく点が取れていない時はゆるめる（線が途切れないように）
+  const since=(p.timestamp-(rec.lastT||rec.start))/1000;
+  const accLimit=since>20?100:(last?40:60);
+  if(acc>accLimit){redrawRec();updRec();return;}
+  if(last){const d=hav(last,ll),dt=(p.timestamp-(rec.lastT||p.timestamp))/1000;
+    if(d<Math.max(3,Math.min(acc,40)*0.4)){redrawRec();return;}   // 止まっている時のブレ
+    if(dt>0&&d/dt>8&&(rec.rej=(rec.rej||0)+1)<3){redrawRec();return;} // 飛び値（3回続いたら本物とみなす）
+  }
+  rec.rej=0;seg.push(ll);rec.lastT=p.timestamp;redrawRec();updRec();persistRec();
+}
+$('#startBtn').onclick=()=>startGPS(false);
+$('#pauseBtn').onclick=()=>{
+  if(!rec)return;
+  if(rec.paused){rec.pausedMs+=Date.now()-rec.pauseStart;rec.paused=false;rec.segs.push([]);$('#pauseBtn').textContent='⏸ 一時停止';$('#recStatus').textContent='散歩を記録中';toast('再開しました');}
+  else{rec.paused=true;rec.pauseStart=Date.now();$('#pauseBtn').textContent='▶ 再開';$('#recStatus').textContent='一時停止中';toast('一時停止中');}
+  persistRec();updRec();
+};
+$('#stopBtn').onclick=()=>{
+  if(!rec)return;
+  const snap=JSON.parse(JSON.stringify({...rec,watch:null,timer:null})); // 押しまちがえた時に戻せるように
+  navigator.geolocation.clearWatch(rec.watch);clearInterval(rec.timer);releaseWake();
+  if(rec.paused){rec.pausedMs+=Date.now()-rec.pauseStart;rec.paused=false;}
+  const end=Date.now();
+  // 最後の現在地もコースに入れて、終点まで線がつながるようにする
+  const ls=rec.segs[rec.segs.length-1],lp=ls[ls.length-1];
+  if(rec.cur&&(!lp||hav(lp,rec.cur)>3))ls.push(rec.cur);
+  const segs=rec.segs.filter(s=>s.length),npts=segs.flat().length;
+  const minutes=Math.max(1,Math.round((end-rec.start-rec.pausedMs)/60000));
+  if(npts<2){
+    // GPSでコースが取れなかった時は、その場で地図に描いてもらう
+    const ids=rec.walkerIds,st0=rec.start;hideRecPanel();
+    rec={mode:'draw',walkerIds:ids,segs:[segs.flat()],gpsStart:st0,gpsMin:minutes};follow=false;showRecPanel();
+    $('#drawHint').textContent='GPSでコースを記録できませんでした。歩いたコースを地図をタップして描いてください';
+    toast('GPSでコースが取れませんでした。地図に描いてください');persistRec();
+    // 10分以内に描かなくても、自動で記録してトップへ戻る
+    startAutoTop(()=>{if(rec&&rec.gpsStart){const r=rec;rec=null;persistRec();hideRecPanel();
+      autoSaveWalk({mode:'gps',date:ymd(new Date(r.gpsStart)),start:r.gpsStart,minutes:r.gpsMin,walkerIds:r.walkerIds,segs:r.segs});}});
+    return;
+  }
+  const draft={mode:'gps',date:ymd(new Date(rec.start)),start:rec.start,minutes,walkerIds:rec.walkerIds,segs};
+  rec=null;persistRec();hideRecPanel();
+  const w=autoSaveWalk(draft);doneScreen(w,snap);
+};
+$('#drawBtn').onclick=()=>{
+  const ids=[...selWalkers];if(!ids.length){toast('いっしょに歩くメンバーを選んでね');return;}
+  rec={mode:'draw',walkerIds:ids,segs:[[]]};follow=false;showRecPanel();
+};
+function onMapClick(e){if(!rec||rec.mode!=='draw')return;rec.segs[0].push([+e.latlng.lat.toFixed(6),+e.latlng.lng.toFixed(6)]);redrawRec();updRec();}
+$('#undoBtn').onclick=()=>{if(rec&&rec.mode==='draw'){rec.segs[0].pop();redrawRec();updRec();}};
+$('#drawCancelBtn').onclick=()=>{if(rec&&rec.gpsStart&&!confirm('この散歩を記録せずにやめますか？'))return;stopAutoTop();rec=null;persistRec();hideRecPanel();refreshDay(false);};
+$('#drawDoneBtn').onclick=()=>{
+  if(!rec||rec.segs[0].length<2){toast('2点以上タップしてください');return;}
+  const dist=segsDist(rec.segs);const now=new Date();
+  const base=parseYmd(viewDate);base.setHours(now.getHours(),now.getMinutes(),0,0);
+  if(rec.gpsStart){ // GPSが取れず手で描いた場合も、すぐ記録
+    const dr={mode:'gps',date:ymd(new Date(rec.gpsStart)),start:rec.gpsStart,minutes:rec.gpsMin,walkerIds:rec.walkerIds,segs:rec.segs};
+    rec=null;persistRec();hideRecPanel();stopAutoTop();doneScreen(autoSaveWalk(dr));return;}
+  const draft={mode:'draw',date:viewDate,start:base.getTime(),minutes:Math.max(5,Math.round(dist/70)),walkerIds:rec.walkerIds,segs:rec.segs};
+  rec=null;persistRec();hideRecPanel();saveDialog(draft);
+};
+
+/* ---------- 散歩おわり → 自動で記録し、10分後にトップへ ---------- */
+const AUTO_MS=10*60*1000;
+let autoTopT=null,autoTick=null,autoDeadline=0,autoFn=null;
+function startAutoTop(beforeFn){
+  stopAutoTop();autoDeadline=Date.now()+AUTO_MS;autoFn=beforeFn||null;
+  autoTopT=setTimeout(goTop,AUTO_MS);
+  autoTick=setInterval(()=>{const left=autoDeadline-Date.now();const el=$('#dnCount');
+    if(el)el.textContent=`あと ${clock(Math.max(0,left))} で自動的にトップへ戻ります`;
+    if(left<=0)goTop();},1000);
+}
+function stopAutoTop(){clearTimeout(autoTopT);clearInterval(autoTick);autoTopT=autoTick=null;autoDeadline=0;autoFn=null;}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&autoDeadline&&Date.now()>=autoDeadline)goTop();});
+function goTop(){
+  const fn=autoFn;stopAutoTop();if(fn)fn();
+  closeModal();viewDate=todayStr();switchTab('map');refreshDay(true);
+  if(D.settings.splash){$('#splash').classList.remove('hidden');showSplash();}
+}
+function autoSaveWalk(dr){
+  const w0=walkerById(dr.walkerIds[0]);
+  const w={id:uid(),date:dr.date,start:dr.start,end:dr.start+dr.minutes*60000,walkerIds:dr.walkerIds,segs:dr.segs,
+    dist:Math.round(segsDist(dr.segs)),color:ROUTE_COLOR,memo:'',mode:dr.mode};
+  D.walks.push(w);save();return w;
+}
+function doneScreen(w,snap){
+  viewDate=w.date;switchTab('map');refreshDay(true);playHappy();
+  const st2=streaks();
+  openModal(`<div style="text-align:center"><div style="font-size:64px">🐕🎉</div><h2>おつかれさま！記録しました</h2>
+    <p style="font-size:19px">${fmtDist(w.dist)} 歩きました<br>今日の合計 <b>${fmtDist(sumDist(walksOn(w.date)))}</b>${st2.cur>1?`<br>🔥 連続 ${st2.cur}日目！`:''}</p>
+    <p class="note" id="dnCount">あと 10:00 で自動的にトップへ戻ります</p></div>
+    <button class="btn main big" id="dnTop" style="width:100%">🏠 トップへ戻る</button>
+    <div class="row"><button class="btn" id="dnEdit">✏️ メモ・メンバー</button><button class="btn line" id="dnLine">💬 LINEで送る</button></div>
+    ${snap?'<div class="row"><button class="btn ghost" id="dnResume">↩ まちがえて押した（記録を続ける）</button></div>':''}`);
+  startAutoTop();
+  $('#dnTop').onclick=goTop;
+  $('#dnLine').onclick=()=>shareDay(w.date);
+  $('#dnEdit').onclick=()=>openWalk(w.id);
+  if(snap)$('#dnResume').onclick=()=>{
+    stopAutoTop();D.walks=D.walks.filter(x=>x.id!==w.id);save();closeModal();stopMusic();
+    rec=snap;rec.segs.push([]);startGPS(true);toast('記録を続けます');
+  };
+}
+
+/* ---------- 保存ダイアログ ---------- */
+function saveDialog(dr){
+  const dist=segsDist(dr.segs),w0=walkerById(dr.walkerIds[0]);
+  openModal(`<h2>🐾 散歩を保存</h2>
+    <div class="kpis"><div class="kpi big"><small>距離</small><b>${km(dist)}<i>km</i></b></div></div>
+    <div class="row"><div class="field" style="flex:1"><label>日付</label><input type="date" id="sdDate" value="${dr.date}" max="${todayStr()}"></div>
+    <div class="field" style="flex:1"><label>開始時刻</label><input type="time" id="sdTime" value="${hm(dr.start)}"></div>
+    <div class="field" style="width:84px"><label>時間(分)</label><input type="number" id="sdMin" value="${dr.minutes}" min="1"></div></div>
+    <div class="field"><label>歩いたメンバー</label>${chipEditor(dr.walkerIds)}</div>
+    <div class="field"><label>メモ（うんち・出会った犬・天気など）</label><textarea id="sdMemo" rows="2" placeholder="例）公園でコロちゃんに会った"></textarea></div>
+    <div class="row"><button class="btn ghost" id="sdDiscard">捨てる</button><button class="btn go" id="sdSave">💾 保存する</button></div>`);
+  bindChipEditor();
+  $('#sdDiscard').onclick=()=>{if(confirm('この記録を捨てますか？')){closeModal();refreshDay(false);}};
+  $('#sdSave').onclick=()=>{
+    const date=$('#sdDate').value||todayStr(),[h,m]=($('#sdTime').value||'00:00').split(':').map(Number);
+    const st=parseYmd(date);st.setHours(h,m,0,0);const min=Math.max(1,+$('#sdMin').value||1);
+    const ids=readChips();if(!ids.length){toast('メンバーを1人以上選んでね');return;}
+    const w={id:uid(),date,start:st.getTime(),end:st.getTime()+min*60000,walkerIds:ids,segs:dr.segs,dist:Math.round(segsDist(dr.segs)),color:ROUTE_COLOR,memo:$('#sdMemo').value.trim(),mode:dr.mode};
+    D.walks.push(w);save();closeModal();
+    viewDate=date;refreshDay(true);playHappy();
+    const st2=streaks();
+    openModal(`<div style="text-align:center"><div style="font-size:64px">🐕🎉</div><h2>おつかれさま！</h2>
+      <p>${fmtDist(w.dist)} 歩きました<br>この日の合計 <b>${fmtDist(sumDist(walksOn(date)))}</b>${st2.cur>1?`<br>🔥 連続 ${st2.cur}日目！`:''}</p></div>
+      <div class="row"><button class="btn ghost" id="dnClose">とじる</button><button class="btn line" id="dnLine">💬 LINEで送る</button></div>`);
+    $('#dnClose').onclick=closeModal;$('#dnLine').onclick=()=>shareDay(date);
+    if(curTab!=='map')renderTab(curTab);
+  };
+}
+
+/* ---------- 散歩の詳細・編集 ---------- */
+function openWalk(id){
+  const w=D.walks.find(x=>x.id===id);if(!w)return;
+  const dur=(w.end||w.start)-w.start,pace=w.dist>50?dur/60000/(w.dist/1000):0;
+  openModal(`<h2>${slot(w.start)}の散歩 <small style="color:var(--sub);font-weight:400">${jpDateY(w.date)} ${hm(w.start)}〜${hm(w.end)}</small></h2>
+    <div class="kpis"><div class="kpi"><small>距離</small><b>${km(w.dist)}<i>km</i></b></div><div class="kpi"><small>時間</small><b>${fmtDur(dur)}</b></div>
+    <div class="kpi"><small>ペース</small><b>${pace?pace.toFixed(1):'-'}<i>分/km</i></b></div><div class="kpi"><small>記録方法</small><b style="font-size:17px">${w.mode==='gps'?'📡 GPS':'✏️ 手描き'}</b></div></div>
+    <div class="field"><label>歩いたメンバー</label>${chipEditor(w.walkerIds)}</div>
+    <div class="field"><label>メモ</label><textarea id="owMemo" rows="2">${esc(w.memo)}</textarea></div>
+    <div class="row"><button class="btn ghost" id="owDel">🗑 削除</button><button class="btn line" id="owLine">💬 LINE</button><button class="btn main" id="owSave">保存</button></div>`);
+  bindChipEditor();
+  $('#owSave').onclick=()=>{const ids=readChips();if(!ids.length){toast('メンバーを1人以上選んでね');return;}
+    w.walkerIds=ids;w.memo=$('#owMemo').value.trim();save();closeModal();refreshDay(false);if(curTab!=='map')renderTab(curTab);toast('保存しました');};
+  $('#owDel').onclick=()=>{if(!confirm('この散歩記録を削除しますか？'))return;D.walks=D.walks.filter(x=>x.id!==id);save();closeModal();refreshDay(false);if(curTab!=='map')renderTab(curTab);toast('削除しました');};
+  $('#owLine').onclick=()=>shareWalks([w],`${jpDateY(w.date)} ${slot(w.start)}の散歩`,walkText([w],w.date,true));
+}
+function walkRows(ws){
+  return ws.map(w=>`<div class="walkitem" style="--c:${ROUTE_COLOR}" data-id="${w.id}"><div class="m"><b>${slot(w.start)} ${hm(w.start)}〜${hm(w.end)}</b><br><small>${w.walkerIds.map(wName).map(esc).join('・')}${w.memo?'　📝'+esc(w.memo):''}</small></div><div class="d">${fmtDist(w.dist)}</div></div>`).join('');
+}
+function bindWalkRows(root){root.querySelectorAll('.walkitem').forEach(el=>el.onclick=()=>{const id=el.dataset.id;closeModal();openWalk(id);});}
+function showDayList(s){
+  const ws=walksOn(s);
+  openModal(`<h2>📋 ${jpDateY(s)} の散歩</h2>${ws.length?walkRows(ws):'<p class="note">この日の記録はまだありません。</p>'}
+    ${ws.length?`<p style="text-align:right;font-weight:800;color:var(--main2)">合計 ${fmtDist(sumDist(ws))}（${ws.length}回）</p>`:''}
+    <div class="row"><button class="btn ghost" id="dlClose">とじる</button>${ws.length?'<button class="btn line" id="dlLine">💬 LINEで送る</button>':''}</div>`);
+  bindWalkRows($('#modalBody'));$('#dlClose').onclick=closeModal;if(ws.length)$('#dlLine').onclick=()=>shareDay(s);
+}
+
+/* ---------- LINE共有（画像＋文章） ---------- */
+function walkText(ws,s,single){
+  const L1=[`🐾 犬も歩けば君 散歩レポート`,`📅 ${jpDateY(s)}`];
+  ws.forEach(w=>L1.push(`・${slot(w.start)} ${hm(w.start)}〜${hm(w.end)}　${km(w.dist)}km　${w.walkerIds.map(wName).join(' ')}${w.memo?`\n　📝${w.memo}`:''}`));
+  if(!single)L1.push(`合計 ${km(sumDist(ws))}km（${ws.length}回）`);
+  const [a,b]=rangeOf('week',s),[c,d]=rangeOf('month',s);
+  L1.push(`今週 ${km(sumDist(walksIn(a,b)))}km ／ 今月 ${km(sumDist(walksIn(c,d)))}km`);
+  const st=streaks();if(s===todayStr()&&st.cur>1)L1.push(`🔥 連続 ${st.cur}日目！`);
+  return L1.join('\n');
+}
+function shareDay(s){const ws=walksOn(s);if(!ws.length){toast('記録がありません');return;}shareWalks(ws,`${jpDateY(s)} の散歩`,walkText(ws,s));}
+
+let shareBlob=null;
+async function shareWalks(ws,title,text){
+  shareBlob=null;
+  openModal(`<h2>💬 LINEで送る</h2><div id="shImgBox"><p class="note">画像を作成中…🐕💨</p></div>
+    <pre class="sharetext">${esc(text)}</pre>
+    <button class="btn line big" id="shBoth" style="width:100%">📷 画像＋文章をLINEで送る</button>
+    <div class="row"><a class="btn line" id="shText" style="text-align:center;text-decoration:none" target="_blank" href="https://line.me/R/share?text=${encodeURIComponent(text)}">✉️ 文章だけ送る</a>
+    <button class="btn" id="shCopy">📋 文章コピー</button></div>
+    <div class="row"><button class="btn" id="shSave">💾 画像を保存</button><button class="btn ghost" id="shClose">とじる</button></div>
+    <p class="note">「画像＋文章」は共有メニューが開くので<b>LINE</b>を選び、送る相手（友だち・グループ）を選んでください。</p>`);
+  $('#shClose').onclick=closeModal;
+  $('#shCopy').onclick=async()=>{try{await navigator.clipboard.writeText(text);toast('コピーしました');}catch(e){toast('コピーできませんでした');}};
+  const cv=await renderShareImage(ws,title,ws.length>1||ws.some(w=>w.date!==ws[0].date)?null:ws[0]);
+  const blob=await new Promise(r=>{try{cv.toBlob(r,'image/png');}catch(e){r(null);}});
+  shareBlob=blob;const box=$('#shImgBox');if(!box)return;
+  box.innerHTML=blob?`<img class="shareimg" src="${URL.createObjectURL(blob)}">`:'<p class="note">画像を作れませんでした（文章のみ送れます）</p>';
+  $('#shSave').onclick=()=>{if(!shareBlob)return;const a=document.createElement('a');a.href=URL.createObjectURL(shareBlob);a.download=`sanpo_${todayStr()}.png`;document.body.appendChild(a);a.click();a.remove();};
+  $('#shBoth').onclick=async()=>{
+    if(shareBlob){const f=new File([shareBlob],'sanpo.png',{type:'image/png'});
+      if(navigator.canShare&&navigator.canShare({files:[f]})){try{try{await navigator.clipboard.writeText(text);}catch(e){}await navigator.share({files:[f],text,title:'犬も歩けば君'});toast('文章もコピーしたので、LINEで貼り付けもできます');return;}catch(e){if(e.name==='AbortError')return;}}}
+    location.href='https://line.me/R/share?text='+encodeURIComponent(text);
+  };
+}
+/* 地図＋コースの画像を作る（背景：地理院タイル） */
+function lon2x(lon,z){return (lon+180)/360*256*2**z;}
+function lat2y(lat,z){const r=lat*Math.PI/180;return (1-Math.log(Math.tan(r)+1/Math.cos(r))/Math.PI)/2*256*2**z;}
+function loadImg(src,ms=6000){return new Promise(res=>{const im=new Image();im.crossOrigin='anonymous';const t=setTimeout(()=>res(null),ms);im.onload=()=>{clearTimeout(t);res(im);};im.onerror=()=>{clearTimeout(t);res(null);};im.src=src;});}
+async function renderShareImage(ws,title,single){
+  const W=1080,H=1350,MY=150,MH=860,cv=document.createElement('canvas');cv.width=W;cv.height=H;const g=cv.getContext('2d');
+  g.fillStyle='#fff8ec';g.fillRect(0,0,W,H);
+  // ヘッダー
+  const grd=g.createLinearGradient(0,0,W,0);grd.addColorStop(0,'#fbbf24');grd.addColorStop(1,'#f59e0b');g.fillStyle=grd;g.fillRect(0,0,W,MY);
+  g.fillStyle='#fff';g.font='bold 56px sans-serif';g.textBaseline='middle';g.fillText('🐕 犬も歩けば君',40,58);
+  g.font='bold 36px sans-serif';g.fillText(title,40,118);
+  // 地図
+  g.fillStyle='#eae6dc';g.fillRect(0,MY,W,MH);
+  const pts=ws.flatMap(w=>w.segs.flat());
+  if(pts.length){
+    let z=18;const la=pts.map(p=>p[0]),lo=pts.map(p=>p[1]);
+    const n=Math.max(...la),s=Math.min(...la),e=Math.max(...lo),wv=Math.min(...lo);
+    for(;z>3;z--){if(lon2x(e,z)-lon2x(wv,z)<=W-360&&lat2y(s,z)-lat2y(n,z)<=MH-240)break;}
+    z=Math.min(z,17);
+    const cx=(lon2x(e,z)+lon2x(wv,z))/2,cy=(lat2y(s,z)+lat2y(n,z))/2;
+    const spx=Math.max(1,lon2x(e,z)-lon2x(wv,z)),spy=Math.max(1,lat2y(s,z)-lat2y(n,z));
+    const sc=Math.max(1,Math.min(2,(W-360)/spx,(MH-240)/spy)); // コースを画面いっぱいに拡大
+    const X=lon=>(lon2x(lon,z)-cx)*sc+W/2,Y=lat=>(lat2y(lat,z)-cy)*sc+MY+MH/2;
+    const tx0=Math.floor((cx-W/2/sc)/256),tx1=Math.floor((cx+W/2/sc)/256),ty0=Math.floor((cy-MH/2/sc)/256),ty1=Math.floor((cy+MH/2/sc)/256);
+    const jobs=[];
+    for(let tx=tx0;tx<=tx1;tx++)for(let ty=ty0;ty<=ty1;ty++)jobs.push(loadImg(`https://cyberjapandata.gsi.go.jp/xyz/pale/${z}/${tx}/${ty}.png`).then(im=>({im,tx,ty})));
+    const tiles=await Promise.all(jobs);
+    g.save();g.beginPath();g.rect(0,MY,W,MH);g.clip();
+    tiles.forEach(({im,tx,ty})=>{if(im)g.drawImage(im,(tx*256-cx)*sc+W/2,(ty*256-cy)*sc+MY+MH/2,256*sc+1,256*sc+1);});
+    g.lineCap='round';g.lineJoin='round';
+    ws.forEach(w=>w.segs.forEach(sg=>{if(sg.length<2)return;
+      [[24,'#fff'],[15,ROUTE_COLOR]].forEach(([lw,c])=>{g.strokeStyle=c;g.lineWidth=lw;g.beginPath();sg.forEach((p,i)=>i?g.lineTo(X(p[1]),Y(p[0])):g.moveTo(X(p[1]),Y(p[0])));g.stroke();});}));
+    ws.forEach(w=>{const f=w.segs.flat();if(!f.length)return;
+      const mk=(p,c,t,left)=>{const x=X(p[1]),y=Y(p[0]);
+        g.fillStyle=c;g.strokeStyle='#fff';g.lineWidth=5;g.beginPath();g.arc(x,y,13,0,7);g.fill();g.stroke();
+        g.font='bold 30px sans-serif';const tw=g.measureText(t).width+28,h=48,bx=left?x-tw:x,by=y-h-6;
+        g.beginPath();g.roundRect?g.roundRect(bx,by,tw,h,12):g.rect(bx,by,tw,h);g.fillStyle=c;g.fill();g.lineWidth=4;g.stroke();
+        g.fillStyle='#fff';g.textAlign='center';g.textBaseline='middle';g.fillText(t,bx+tw/2,by+h/2+1);g.textAlign='left';};
+      const pre=ws.length>1?('①②③④⑤⑥⑦⑧⑨⑩'[ws.indexOf(w)]||''):'';
+      mk(f[0],'#16a34a',pre+'スタート',true);if(f.length>1)mk(f[f.length-1],'#dc2626',pre+'ゴール',false);});
+    g.restore();
+  }else{g.fillStyle='#7c6f64';g.font='bold 40px sans-serif';g.textAlign='center';g.fillText('（コースなし）',W/2,MY+MH/2);g.textAlign='left';}
+  // フッター
+  const tot=sumDist(ws),dur=sumDur(ws);
+  g.fillStyle='#2b2118';g.font='bold 30px sans-serif';g.fillText('きょりの合計',40,MY+MH+48);
+  g.fillStyle='#d97706';g.font='bold 110px sans-serif';g.fillText(km(tot),40,MY+MH+140);
+  const kw=g.measureText(km(tot)).width;g.font='bold 44px sans-serif';g.fillText('km',52+kw,MY+MH+160);
+  g.fillStyle='#2b2118';g.font='bold 34px sans-serif';
+  g.fillText(`🐾 ${ws.length}回　⏱ ${fmtDur(dur)}`,560,MY+MH+80);
+  const names=[...new Set(ws.flatMap(w=>w.walkerIds))].map(wName).join(' ');
+  g.font='30px sans-serif';wrapText(g,names,560,MY+MH+135,480,40);
+  const st=streaks();if(st.cur>1){g.fillStyle='#dc2626';g.font='bold 30px sans-serif';g.fillText(`🔥 連続 ${st.cur}日`,560,MY+MH+225);}
+  g.fillStyle='#9a8f84';g.font='20px sans-serif';g.fillText('背景地図：地理院タイル（国土地理院）',40,H-24);
+  return cv;
+}
+function wrapText(g,t,x,y,mw,lh){let line='';for(const ch of t){if(g.measureText(line+ch).width>mw){g.fillText(line,x,y);line=ch;y+=lh;}else line+=ch;}g.fillText(line,x,y);}
+
+/* ---------- カレンダー ---------- */
+let calM=new Date(),calSel=todayStr();calM.setDate(1);
+function renderCal(){
+  const y=calM.getFullYear(),m=calM.getMonth(),days=new Date(y,m+1,0).getDate(),fw=new Date(y,m,1).getDay(),td=todayStr();
+  const a=ymd(new Date(y,m,1)),b=ymd(new Date(y,m,days));const mw=walksIn(a,b);
+  let h=`<div class="card"><div class="calhead"><button class="iconbtn" data-cm="-1">◀</button><b>${y}年${m+1}月</b><button class="iconbtn" data-cm="1">▶</button></div>
+    <p style="margin:0 0 8px;text-align:center;font-size:14px">月合計 <b style="color:var(--main2)">${fmtDist(sumDist(mw))}</b>・${mw.length}回・${new Set(mw.map(w=>w.date)).size}日</p>
+    <div class="calgrid">${[...WD].map(c=>`<div class="wd">${c}</div>`).join('')}`;
+  for(let i=0;i<fw;i++)h+='<div class="cell empty"></div>';
+  for(let d=1;d<=days;d++){
+    const s=`${y}-${pad(m+1)}-${pad(d)}`,ws=walksOn(s),dist=sumDist(ws);
+    const cls=ws.length?'walk':(s<td?'miss':'');
+    h+=`<div class="cell ${cls} ${s===td?'today':''} ${s===calSel?'sel':''}" data-d="${s}"><span class="n">${d}</span><span class="p">${ws.length?(ws.length>1?'🐾🐾':'🐾'):(s<td?'😢':'')}</span>${ws.length?`<span class="k">${(dist/1000).toFixed(1)}km</span>`:''}</div>`;
+  }
+  h+='</div></div>';$('#calBox').innerHTML=h;
+  $('#calBox').querySelectorAll('[data-cm]').forEach(bt=>bt.onclick=()=>{calM.setMonth(calM.getMonth()+ +bt.dataset.cm);renderCal();});
+  $('#calBox').querySelectorAll('[data-d]').forEach(c=>c.onclick=()=>{calSel=c.dataset.d;renderCal();});
+  renderCalDay();
+}
+function renderCalDay(){
+  const s=calSel,ws=walksOn(s),td=todayStr();
+  $('#calDay').innerHTML=`<div class="card" style="margin-top:10px"><h3 style="margin-top:0">${jpDateY(s)} ${ws.length?`<span style="color:var(--main2)">${fmtDist(sumDist(ws))}</span>`:''}</h3>
+    ${ws.length?walkRows(ws):`<p class="note">${s>td?'未来の日です':'この日は散歩していません 😢'}</p>`}
+    <div class="row"><button class="btn" id="cdMap">🗺 地図で見る</button>${s<=td?'<button class="btn" id="cdMusic">🎵 この日の音楽</button>':''}</div>
+    <div class="row">${s<=td?'<button class="btn" id="cdAdd">✏️ この日に手で追加</button>':''}${ws.length?'<button class="btn line" id="cdLine">💬 LINEで送る</button>':''}</div></div>`;
+  bindWalkRows($('#calDay'));
+  $('#cdMap').onclick=()=>{viewDate=s;switchTab('map');refreshDay(true);};
+  if($('#cdMusic'))$('#cdMusic').onclick=()=>ws.length?playHappy(true):playScary(true);
+  if($('#cdAdd'))$('#cdAdd').onclick=()=>{viewDate=s;switchTab('map');refreshDay(true);$('#drawBtn').click();};
+  if($('#cdLine'))$('#cdLine').onclick=()=>shareDay(s);
+}
+
+/* ---------- 集計（週・月・年） ---------- */
+let statMode='week',statAnchor=todayStr();
+function rangeOf(mode,s){
+  const d=parseYmd(s);
+  if(mode==='week'){const st=new Date(d);st.setDate(d.getDate()-((d.getDay()+6)%7));const en=new Date(st);en.setDate(st.getDate()+6);return[ymd(st),ymd(en)];}
+  if(mode==='month')return[ymd(new Date(d.getFullYear(),d.getMonth(),1)),ymd(new Date(d.getFullYear(),d.getMonth()+1,0))];
+  return[`${d.getFullYear()}-01-01`,`${d.getFullYear()}-12-31`];
+}
+function periodLabel(mode,a,b){const A=parseYmd(a);
+  if(mode==='week')return `${jpDate(a)} 〜 ${jpDate(b)}`;
+  if(mode==='month')return `${A.getFullYear()}年${A.getMonth()+1}月`;return `${A.getFullYear()}年`;}
+function shiftAnchor(n){const d=parseYmd(statAnchor);
+  if(statMode==='week')d.setDate(d.getDate()+7*n);else if(statMode==='month'){d.setDate(1);d.setMonth(d.getMonth()+n);}else d.setFullYear(d.getFullYear()+n);
+  statAnchor=ymd(d);}
+function barChart(vals,labels,hiIdx){
+  const W=360,H=190,x0=34,x1=354,y0=12,y1=150,max=Math.max(1,...vals),n=vals.length,step=(x1-x0)/n,bw=step*0.7;
+  const top=Math.ceil(max*10)/10;let s=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto">`;
+  [0,.5,1].forEach(f=>{const y=y1-(y1-y0)*f;s+=`<line x1="${x0}" x2="${x1}" y1="${y}" y2="${y}" stroke="#eadfcd"/><text x="${x0-4}" y="${y+4}" font-size="13" text-anchor="end" fill="#7c6f64">${(top*f).toFixed(top<3?1:0)}</text>`;});
+  vals.forEach((v,i)=>{const h=(y1-y0)*v/top,x=x0+i*step+(step-bw)/2;
+    s+=`<rect x="${x}" y="${y1-h}" width="${bw}" height="${Math.max(h,0)}" rx="3" fill="${i===hiIdx?'#d97706':'#fbbf24'}"/>`;
+    if(n<=12||i===0||(i+1)%5===0)s+=`<text x="${x+bw/2}" y="${y1+17}" font-size="13" text-anchor="middle" fill="#7c6f64">${labels[i]}</text>`;});
+  return s+`<text x="${x0}" y="${H-4}" font-size="12" fill="#7c6f64">単位：km</text></svg>`;
+}
+// 花丸（手描き風のSVG）
+function hanamaruSVG(){
+  const c=50,R=40,n=11;let d='';
+  for(let i=0;i<=n;i++){const a=-Math.PI/2+i*2*Math.PI/n,x=(c+R*Math.cos(a)).toFixed(1),y=(c+R*Math.sin(a)).toFixed(1);d+=i?` A9 9 0 0 1 ${x} ${y}`:`M${x} ${y}`;}
+  let sp='';for(let k=0;k<=150;k++){const t=k/150*Math.PI*2*2.6,r=4+t*2.7,x=(c+r*Math.cos(t-1.2)).toFixed(1),y=(c+r*Math.sin(t-1.2)).toFixed(1);sp+=(k?' L':'M')+x+' '+y;}
+  return `<svg viewBox="0 0 100 100"><path d="${d}" fill="none" stroke="#e11d48" stroke-width="4.5" stroke-linejoin="round"/><path d="${sp}" fill="none" stroke="#e11d48" stroke-width="4.5" stroke-linecap="round"/></svg>`;
+}
+const batsuSVG=`<svg viewBox="0 0 100 100"><path d="M24 24 L76 76 M76 24 L24 76" stroke="#475569" stroke-width="11" stroke-linecap="round"/></svg>`;
+function markCell(s,td,big){
+  const ws=walksOn(s),dist=sumDist(ws),d=parseYmd(s),dow=d.getDay();
+  const mark=ws.length?hanamaruSVG():(s<td?batsuSVG:'');
+  return `<div class="mcell ${s===td?'today':''} ${s>td?'future':''}" data-go="${s}">
+    <span class="mn" style="color:${dow===0?'#dc2626':dow===6?'#2563eb':'inherit'}">${big?`${d.getMonth()+1}/${d.getDate()}`:d.getDate()}</span>
+    <span class="mk">${mark}</span>
+    <span class="mkm">${ws.length?(dist/1000).toFixed(1)+'km'+(ws.length>1?`<br>${ws.length}回`:''):''}</span></div>`;
+}
+function statCalendar(a,b,td){
+  if(statMode==='week'){
+    let h='<div class="mcal week">'+['月','火','水','木','金','土','日'].map((w,i)=>`<div class="mwd" style="color:${i===6?'#dc2626':i===5?'#2563eb':'inherit'}">${w}</div>`).join('');
+    for(let s=a;s<=b;s=addDays(s,1))h+=markCell(s,td,true);
+    return h+'</div>';
+  }
+  const first=parseYmd(a),fw=first.getDay();
+  let h='<div class="mcal">'+[...WD].map((w,i)=>`<div class="mwd" style="color:${i===0?'#dc2626':i===6?'#2563eb':'inherit'}">${w}</div>`).join('');
+  for(let i=0;i<fw;i++)h+='<div></div>';
+  for(let s=a;s<=b;s=addDays(s,1))h+=markCell(s,td,false);
+  return h+'</div>';
+}
+function renderStat(){
+  const [a,b]=rangeOf(statMode,statAnchor),ws=walksIn(a,b),td=todayStr();
+  const tot=sumDist(ws),days=new Set(ws.map(w=>w.date)).size;
+  let totalDays=0;for(let s=a;s<=b&&s<=td;s=addDays(s,1))totalDays++;
+  const longest=ws.reduce((m,w)=>w.dist>m.dist?w:m,{dist:0});
+  let vals=[],labels=[],hi=-1;
+  if(statMode==='year'){const y=+a.slice(0,4);for(let m=0;m<12;m++){const[p,q]=rangeOf('month',ymd(new Date(y,m,1)));vals.push(sumDist(walksIn(p,q))/1000);labels.push(m+1+'月');if(td>=p&&td<=q)hi=m;}}
+  else{let i=0;for(let s=a;s<=b;s=addDays(s,1),i++){vals.push(sumDist(walksOn(s))/1000);const d=parseYmd(s);labels.push(statMode==='week'?WD[d.getDay()]:String(d.getDate()));if(s===td)hi=i;}}
+  const per=D.walkers.map(w=>{const x=ws.filter(k=>k.walkerIds.includes(w.id));return{w,dist:sumDist(x),n:x.length};}).filter(p=>p.n);
+  const pmax=Math.max(1,...per.map(p=>p.dist));const st=streaks();
+  $('#statBox').innerHTML=`<div class="seg">${[['week','週'],['month','月'],['year','年']].map(([k,l])=>`<button data-sm="${k}" class="${statMode===k?'on':''}">${l}</button>`).join('')}</div>
+    <div class="calhead"><button class="iconbtn" data-sh="-1">◀</button><b>${periodLabel(statMode,a,b)}</b><button class="iconbtn" data-sh="1" ${b>=td?'disabled':''}>▶</button></div>
+    ${statMode==='year'?`<div class="kpis">
+      <div class="kpi big"><small>合計きょり</small><b>${km(tot)}<i>km</i></b></div>
+      <div class="kpi"><small>散歩回数</small><b>${ws.length}<i>回</i></b></div>
+      <div class="kpi"><small>歩いた日</small><b>${days}<i>/ ${totalDays}日</i></b></div>
+      <div class="kpi" style="grid-column:1/3"><small>1日平均（歩いた日）</small><b>${days?km(tot/days):'0.00'}<i>km</i></b></div>
+    </div>
+    <div class="card" style="margin-top:10px">${barChart(vals,labels,hi)}</div>`
+    :`<div class="ksum"><div><small>合計きょり</small><b>${km(tot)}<i>km</i></b></div><div><small>散歩回数</small><b>${ws.length}<i>回</i></b></div><div><small>歩いた日</small><b>${days}<i>/${totalDays}日</i></b></div></div>
+    <div class="card" style="padding:8px">${statCalendar(a,b,td)}
+      <p class="note" style="margin:6px 0 0;text-align:center">花丸＝散歩した日　✕＝しなかった日</p></div>`}
+    <h3>メンバー別</h3><div class="card">${per.length?per.map(p=>`<div class="wbar"><span class="nm">${p.w.emoji}${esc(p.w.name)}</span><span class="tr"><div style="width:${p.dist/pmax*100}%;background:${p.w.color}"></div></span><span class="v">${km(p.dist)}km<small style="color:var(--sub)"> ${p.n}回</small></span></div>`).join(''):'<p class="note">この期間の記録はありません</p>'}</div>
+    <h3>連続記録</h3><div class="kpis"><div class="kpi"><small>いまの連続</small><b>🔥${st.cur}<i>日</i></b></div><div class="kpi"><small>最長の連続</small><b>🏆${st.max}<i>日</i></b></div></div>
+    <div class="row" style="margin-top:12px"><button class="btn line big" id="stLine" ${ws.length?'':'disabled'}>💬 この集計をLINEで送る</button></div>`;
+  $('#statBox').querySelectorAll('[data-sm]').forEach(bt=>bt.onclick=()=>{statMode=bt.dataset.sm;statAnchor=todayStr();renderStat();});
+  $('#statBox').querySelectorAll('[data-go]').forEach(c=>c.onclick=()=>{calSel=c.dataset.go;const d=parseYmd(calSel);calM=new Date(d.getFullYear(),d.getMonth(),1);switchTab('cal');});
+  $('#statBox').querySelectorAll('[data-sh]').forEach(bt=>bt.onclick=()=>{shiftAnchor(+bt.dataset.sh);renderStat();});
+  $('#stLine').onclick=()=>{
+    const lbl=periodLabel(statMode,a,b);
+    const t=[`🐾 犬も歩けば君 ${statMode==='week'?'週間':statMode==='month'?'月間':'年間'}レポート`,`📅 ${lbl}`,`合計 ${km(tot)}km（${ws.length}回・${days}日）`,`1日平均 ${days?km(tot/days):'0.00'}km`,...per.map(p=>`${p.w.emoji}${p.w.name} ${km(p.dist)}km`),st.cur>1?`🔥 連続 ${st.cur}日`:''].filter(Boolean).join('\n');
+    shareWalks(ws,lbl+' のコース',t);
+  };
+}
+
+/* ---------- メンバー・設定 ---------- */
+function renderSet(){
+  $('#setBox').innerHTML=`<h2>🐕 メンバー（犬・人）</h2>
+    ${D.walkers.map(w=>`<div class="member"><span style="font-size:24px">${w.emoji}</span><span class="nm">${esc(w.name)} <small style="color:var(--sub);font-weight:400">${w.type==='dog'?'犬':'人'}</small></span><span class="sw" style="background:${w.color}"></span><button class="iconbtn" data-ew="${w.id}">編集</button></div>`).join('')}
+    <div class="row"><button class="btn main" id="addW">＋ メンバーを追加</button></div>
+    <h2 style="margin-top:22px">🎵 音楽</h2>
+    <div class="card">
+      <label class="member" style="box-shadow:none;padding:4px 0"><span class="nm">音楽を鳴らす</span><input type="checkbox" id="sMusic" ${D.settings.music?'checked':''} style="width:22px;height:22px"></label>
+      <label class="member" style="box-shadow:none;padding:4px 0"><span class="nm">起動時に今日の判定を出す</span><input type="checkbox" id="sSplash" ${D.settings.splash?'checked':''} style="width:22px;height:22px"></label>
+      <div class="field"><label>音量</label><input type="range" id="sVol" min="0" max="1" step="0.05" value="${D.settings.vol}"></div>
+      <div class="row"><button class="btn" id="tHappy">🎉 楽しい音楽</button><button class="btn" id="tScary">😢 悲しい音楽</button><button class="btn ghost" id="tStop">■</button></div>
+      <p class="note">散歩した日は楽しい音楽、していない日は残念で悲しい音楽が流れます（起動時・保存時・カレンダー）。曲はアプリ内で自動演奏するオリジナルです。</p>
+    </div>
+    <h2 style="margin-top:22px">🗺 背景地図</h2>
+    <div class="card note">背景地図は地理院地図（淡色）を使っています。出典を表示すれば自由に使える地図です。</div>
+    <h2 style="margin-top:22px">💾 データ</h2>
+    <div class="card">
+      <p class="note">記録はこのスマホのブラウザ内に保存されています。機種変更やブラウザのデータ削除に備えて、ときどきバックアップしてください。（記録数：${D.walks.length}件）</p>
+      <div class="row"><button class="btn" id="bkSave">⬇ バックアップ保存</button><button class="btn" id="bkLoad">⬆ バックアップ読込</button></div>
+      <div class="row"><button class="btn" id="csvSave">📄 CSV（Excel用）</button><button class="btn ghost" id="allDel" style="color:#dc2626">全データ削除</button></div>
+      <input type="file" id="bkFile" accept=".json,application/json" class="hidden">
+    </div>
+    <h2 style="margin-top:22px">❓ 使い方</h2>
+    <div class="card note">
+      ① さんぽタブでメンバーを選んで「散歩スタート」→ 歩き終わったら「散歩おわり」で保存。<br>
+      ② GPSを使わずに、地図をタップしてコースを描いて記録することもできます（過去の日もカレンダーから追加可）。<br>
+      ③ 1日に何回でも記録できます。<br>
+      ④ 「LINEで送る」でコース画像と距離をLINEの友だちに送れます。<br>
+      ⑤ 記録中は画面をつけたままにしてください（画面OFF・他アプリ使用中はGPSが止まることがあります）。<br>
+      ⑥ ホーム画面に追加すると、アプリのように起動できます（Chromeのメニュー →「ホーム画面に追加」）。
+    </div>`;
+  $('#setBox').querySelectorAll('[data-ew]').forEach(b=>b.onclick=()=>editWalker(b.dataset.ew));
+  $('#addW').onclick=()=>editWalker(null);
+  $('#sMusic').onchange=e=>{D.settings.music=e.target.checked;save();updMuteBtn();if(!D.settings.music)stopMusic();};
+  $('#sSplash').onchange=e=>{D.settings.splash=e.target.checked;save();};
+  $('#sVol').oninput=e=>{D.settings.vol=+e.target.value;if(master)master.gain.value=D.settings.vol;save();};
+  $('#tHappy').onclick=()=>playHappy(true);$('#tScary').onclick=()=>playScary(true);$('#tStop').onclick=stopMusic;
+  $('#bkSave').onclick=()=>download(new Blob([JSON.stringify(D)],{type:'application/json'}),`犬も歩けば君_backup_${todayStr()}.json`);
+  $('#bkLoad').onclick=()=>$('#bkFile').click();
+  $('#bkFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const d=JSON.parse(await f.text());if(!Array.isArray(d.walks))throw 0;
+    if(!confirm(`バックアップ（記録${d.walks.length}件）を読み込みます。今のデータは置き換わります。よろしいですか？`))return;
+    D={walkers:d.walkers||[],walks:d.walks,settings:Object.assign(defaultData().settings,d.settings||{})};save();selWalkers=new Set(D.settings.lastWalkers);renderChips();refreshDay(true);renderSet();toast('読み込みました');}
+    catch(err){toast('読み込めないファイルです');}};
+  $('#csvSave').onclick=()=>{
+    const rows=[['日付','曜日','開始','終了','時間(分)','距離(km)','メンバー','メモ','記録方法']];
+    [...D.walks].sort((a,b)=>a.start-b.start).forEach(w=>rows.push([w.date,WD[parseYmd(w.date).getDay()],hm(w.start),hm(w.end),Math.round((w.end-w.start)/60000),km(w.dist),w.walkerIds.map(id=>(walkerById(id)||{name:'削除済み'}).name).join('・'),w.memo||'',w.mode==='gps'?'GPS':'手描き']));
+    const csv='﻿'+rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\r\n');
+    download(new Blob([csv],{type:'text/csv'}),`犬も歩けば君_${todayStr()}.csv`);
+  };
+  $('#allDel').onclick=()=>{if(confirm('すべての散歩記録とメンバーを削除します。元に戻せません。よろしいですか？')&&confirm('本当に削除しますか？')){D=defaultData();save();selWalkers=new Set(D.settings.lastWalkers);renderChips();refreshDay(true);renderSet();toast('削除しました');}};
+}
+function download(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();}
+function editWalker(id){
+  const w=id?walkerById(id):{name:'',type:'dog',emoji:'🐕',color:PALETTE[D.walkers.length%PALETTE.length]};
+  openModal(`<h2>${id?'メンバーを編集':'メンバーを追加'}</h2>
+    <div class="field"><label>名前</label><input id="ewName" value="${esc(w.name)}" placeholder="例）ポチ"></div>
+    <div class="field"><label>種類</label><div class="seg" id="ewType"><button type="button" data-t="dog" class="${w.type==='dog'?'on':''}">🐕 犬</button><button type="button" data-t="person" class="${w.type==='person'?'on':''}">🚶 人</button></div></div>
+    <div class="field"><label>アイコン</label><div class="chips" id="ewEmoji">${EMOJIS.map(e=>`<button type="button" class="chip ${e===w.emoji?'on':''}" data-e="${e}" style="font-size:20px;padding:4px 9px">${e}</button>`).join('')}</div></div>
+    <div class="field"><label>色（メンバーの印の色）</label>${palette(w.color,'ewPal')}</div>
+    <div class="row">${id?'<button class="btn ghost" id="ewDel" style="color:#dc2626">削除</button>':''}<button class="btn ghost" id="ewCancel">やめる</button><button class="btn main" id="ewSave">保存</button></div>`);
+  bindPalette('ewPal');
+  $('#ewType').querySelectorAll('button').forEach(b=>b.onclick=()=>{$('#ewType').querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on');});
+  $('#ewEmoji').querySelectorAll('button').forEach(b=>b.onclick=()=>{$('#ewEmoji').querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on');});
+  $('#ewCancel').onclick=closeModal;
+  $('#ewSave').onclick=()=>{const name=$('#ewName').value.trim();if(!name){toast('名前を入れてください');return;}
+    const o={name,type:$('#ewType .on').dataset.t,emoji:($('#ewEmoji .on')||{dataset:{e:'🐕'}}).dataset.e,color:readPalette('ewPal')};
+    if(id)Object.assign(w,o);else{const nw={id:uid(),...o};D.walkers.push(nw);selWalkers.add(nw.id);D.settings.lastWalkers=[...selWalkers];}
+    save();closeModal();renderChips();renderSet();};
+  if(id)$('#ewDel').onclick=()=>{if(!confirm(`「${w.name}」を削除しますか？（散歩記録は残ります）`))return;D.walkers=D.walkers.filter(x=>x.id!==id);selWalkers.delete(id);D.settings.lastWalkers=[...selWalkers];save();closeModal();renderChips();renderSet();};
+}
+
+/* ---------- タブ ---------- */
+let curTab='map';
+function renderTab(t){if(t==='cal')renderCal();else if(t==='stat')renderStat();else if(t==='set')renderSet();}
+function switchTab(t){
+  curTab=t;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
+  document.querySelectorAll('.tab').forEach(s=>s.classList.toggle('active',s.id==='tab-'+t));
+  if(t==='map'&&map)setTimeout(()=>map.invalidateSize(),50);renderTab(t);
+}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
+
+/* ---------- 起動 ---------- */
+initMap();setIdleUI();renderChips();updMuteBtn();refreshDay(true);
+// 散歩中にアプリが閉じられた場合：開き直すと、そのまま記録の続きから再開
+try{const r=JSON.parse(localStorage.getItem(RECKEY)||'null');
+  if(r&&r.mode==='gps'){
+    const lastAct=Math.max(r.lastT||0,r.start);
+    if(Date.now()-lastAct>3*3600e3){
+      // 3時間以上たっていたら、終わった散歩として自動で記録
+      const segs=r.segs.filter(x=>x.length);
+      if(segs.flat().length){autoSaveWalk({mode:'gps',date:ymd(new Date(r.start)),start:r.start,minutes:Math.max(1,Math.round((lastAct-r.start-(r.pausedMs||0))/60000)),walkerIds:r.walkerIds,segs});refreshDay(true);toast('前回の散歩を自動で記録しました');}
+      rec=null;persistRec();
+    }else{
+      rec=r;rec.watch=null;startGPS(true);
+      toast('散歩の記録を続けています。終わったら「散歩おわり」を押してね');
+    }
+  }}catch(e){rec=null;}
+if(!rec)showSplash();
+// スマホにインストール（アプリ化）用
+if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost')){navigator.serviceWorker.register('sw.js').catch(()=>{});}
+</script>
+</body>
+</html>
