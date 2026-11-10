@@ -204,6 +204,51 @@ h2{font-size:22px}h3{font-size:19px}
 #topBtn{display:flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(180deg,#fbbf24,#f59e0b);color:#fff;font-size:23px;font-weight:900;padding:14px 8px;border-radius:16px;border:3px solid #fff3d6;box-shadow:0 4px 0 #c2410c,0 6px 14px rgba(194,65,12,.35);text-shadow:0 1px 2px rgba(0,0,0,.25);letter-spacing:.05em}
 #topBtn span{font-size:28px;text-shadow:none}
 #topBtn:active{transform:translateY(3px);box-shadow:0 1px 0 #c2410c}
+/* ===== ボタンを小さく、地図を広く ===== */
+.panel{left:6px;right:6px;bottom:6px;padding:8px 10px}
+.status{font-size:15px;margin-bottom:0}
+.recinfo b{font-size:24px}.recinfo small{font-size:13px}
+.row{margin-top:6px}
+.twin .btn{flex-direction:row;justify-content:center;gap:6px;font-size:18px;padding:9px 4px;border-radius:12px}
+.twin .btn span{font-size:20px}
+#topBtn{font-size:17px;padding:7px 8px;border-radius:12px;border-width:2px;box-shadow:0 3px 0 #c2410c,0 4px 8px rgba(194,65,12,.25)}
+#topBtn span{font-size:19px}
+#idleBox .lbl{display:inline;font-size:14px;margin:0 6px 0 0}
+#idleBox .chips{display:inline-flex;vertical-align:middle;gap:5px}
+#idleBox .chip{font-size:15px;padding:4px 10px}
+#idleBox .lblrow{margin-top:7px}
+#idleBox .row .btn{font-size:15px;padding:8px 4px}
+#lineRow .btn{font-size:16px;padding:9px 6px}
+#gpsBox .btn{font-size:15px;padding:7px}
+#gpsBox .hint{font-size:13px;margin-top:3px}
+.daybar{top:6px;left:6px;right:6px;padding:4px 6px}
+.daybar b{font-size:17px}.daybar .tot{font-size:16px}
+.daybar .iconbtn{padding:5px 10px;font-size:16px}
+#locBtn{top:54px;right:8px;font-size:16px;padding:7px 12px 7px 9px;border-width:2px}
+#locBtn .ic{font-size:20px}
+.kcal{color:#ea580c}
+@media (max-height:720px){.twin .btn{padding:7px 4px;font-size:17px}#topBtn{padding:6px}.status{display:none}}
+.kcalbar{background:#fff7ed;border:1.5px solid #fed7aa;color:#9a3412;border-radius:12px;padding:6px 10px;margin:-2px 0 8px;font-size:16px;text-align:center}
+.kcalbar b{font-size:22px;color:#ea580c}
+.walkitem .trash{border:0;background:#fee2e2;border-radius:10px;font-size:20px;padding:8px 10px;margin-left:4px}
+.walkitem .d small{font-size:12px;font-weight:700}
+.delrow{display:flex;gap:10px;align-items:center;padding:9px 8px;border-radius:10px;background:#fffaf1;margin:5px 0;font-size:16px}
+.delrow input{width:24px;height:24px;flex:none}
+.delrow small{color:var(--sub)}
+.kcalcard{background:linear-gradient(135deg,#fff7ed,#ffedd5);border:2px solid #fdba74;border-radius:16px;padding:8px 12px;margin:8px 0;text-align:center;color:#9a3412}
+.kcalcard .kc1{font-size:16px;font-weight:800}
+.kcalcard .kc2{font-size:18px;font-weight:800;color:#ea580c;line-height:1.1}
+.kcalcard .kc2 b{font-size:40px}
+.kcalcard .kc3{font-size:16px;font-weight:700;color:#7c2d12}
+.rpop{font-family:inherit;font-size:16px;text-align:center;min-width:180px}
+.rpop b{font-size:17px}
+.rpop .rk{color:#ea580c;font-weight:800}
+.rpbtns{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.rpbtns button{border:0;border-radius:10px;padding:10px;font-size:16px;font-weight:800;font-family:inherit}
+.rpbtns .op{background:#fdf0d8;color:#2b2118}
+.rpbtns .dl{background:#dc2626;color:#fff}
+.mcell .mkc{font-size:10px;font-weight:700;color:#ea580c;line-height:1.1}
+.mcal.week .mcell .mkc{font-size:12px}
 </style>
 </head>
 <body>
@@ -224,6 +269,7 @@ h2{font-size:22px}h3{font-size:19px}
       <div class="recinfo hidden" id="liveInfo">
         <div><small>時間</small><b id="recTime">0:00</b></div>
         <div><small>距離</small><b id="recDist">0 m</b></div>
+        <div><small>🔥消費カロリー</small><b class="kcal"><span id="recKcal">0</span><i style="font-size:13px;font-style:normal"> kcal</i></b></div>
         <b id="recGps" class="hidden"></b>
       </div>
       <div class="row twin">
@@ -232,8 +278,7 @@ h2{font-size:22px}h3{font-size:19px}
       </div>
       <div class="row"><button class="btn" id="topBtn"><span>🏠</span>トップに戻る</button></div>
       <div id="idleBox">
-        <div class="lbl" style="margin-top:12px">だれと歩く？</div>
-        <div class="chips" id="walkerChips"></div>
+        <div class="lblrow"><span class="lbl">だれと歩く？</span><div class="chips" id="walkerChips"></div></div>
         <div class="row">
           <button class="btn" id="drawBtn">✏️ 手で描く</button>
           <button class="btn" id="dayListBtn">📋 記録を見る</button>
@@ -333,6 +378,16 @@ const sumDist=ws=>ws.reduce((t,w)=>t+(w.dist||0),0);
 const sumDur=ws=>ws.reduce((t,w)=>t+Math.max(0,(w.end||w.start)-w.start),0);
 const walkerById=id=>D.walkers.find(w=>w.id===id);
 const wName=id=>{const w=walkerById(id);return w?`${w.emoji}${w.name}`:'（削除済み）';};
+/* 消費カロリー（目安）：METs×体重(kg)×時間(h)×1.05（人のメンバーの体重で計算） */
+function mets(kmh){return kmh<3.2?2.8:kmh<4.0?3.0:kmh<4.8?3.5:kmh<5.6?4.3:kmh<6.4?5.0:6.0;}
+function kcalFor(weight,distM,ms){const h=ms/3600000;if(h<=0||distM<=0)return 0;return mets(distM/1000/h)*(weight||60)*h*1.05;}
+const mainPerson=ids=>ids.map(walkerById).find(w=>w&&w.type==='person');
+function walkKcal(w,person){const p=person||mainPerson(w.walkerIds);return p?kcalFor(p.weight,w.dist,(w.end||w.start)-w.start):0;}
+const sumKcal=ws=>ws.reduce((t,w)=>t+walkKcal(w),0);
+const fmtKcal=k=>`${Math.round(k).toLocaleString()} kcal`;
+// 分かりやすい例え（おにぎり1個 約180kcal）
+function kcalEq(k){const n=k/180;return n>=0.05?`🍙 おにぎり 約${n<10?n.toFixed(1):Math.round(n)}個分`:'';}
+function kcalCard(k,label){if(!k)return'';return `<div class="kcalcard"><div class="kc1">🔥 ${label||'消費カロリー'}</div><div class="kc2"><b>${Math.round(k).toLocaleString()}</b> kcal</div><div class="kc3">${kcalEq(k)}</div></div>`;}
 const walkedDays=()=>new Set(D.walks.map(w=>w.date));
 
 function streaks(){
@@ -465,7 +520,7 @@ function initMap(){
   if(!window.L){$('#map').innerHTML='<p style="padding:90px 20px;text-align:center">地図を読み込めませんでした。<br>インターネット接続を確認してください。</p>';return;}
   const gsi='<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">地理院タイル</a>';
   baseLayers={
-    pale:L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png',{maxNativeZoom:18,maxZoom:20,attribution:gsi})
+    pale:L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png',{maxNativeZoom:18,maxZoom:20,crossOrigin:'anonymous',attribution:gsi})
   };
   map=L.map('map',{zoomControl:false,attributionControl:true});
   setBase('pale');
@@ -484,27 +539,37 @@ function addFlags(layer,pts,opt){
   const add=(ll,k,txt,sub)=>{
     L.marker(ll,{icon:L.divIcon({className:'flagdot '+k,iconSize:null}),zIndexOffset:900}).addTo(layer);
     const m=L.marker(ll,{icon:L.divIcon({className:'flagwrap',iconSize:[0,0],iconAnchor:[0,0],html:`<div class="flag ${k}">${txt}${sub?`<small>${sub}</small>`:''}</div>`}),zIndexOffset:1000}).addTo(layer);
-    if(onClick)m.on('click',onClick);
+    if(onClick)m.on('click contextmenu',e=>{L.DomEvent.stop(e);onClick(e);});
   };
   if(!pts.length)return;
   add(pts[0],'s',pre+'スタート',st?hm(st):'');
   if(goal&&pts.length>1)add(pts[pts.length-1],'g',pre+'ゴール',en?hm(en):'');
 }
-const PADL=[95,135],PADR=[95,255];
+const PADL=[95,110],PADR=[95,255];
 // 下のボタン欄の高さに合わせて、コースが隠れないよう余白を自動計算
-const FIT_OPT={maxZoom:18,paddingTopLeft:PADL,get paddingBottomRight(){const pn=[...document.querySelectorAll('.panel')].find(e=>!e.classList.contains('hidden'));PADR[1]=(pn?pn.offsetHeight:230)+15;return PADR;}};
+const FIT_OPT={maxZoom:18,paddingTopLeft:PADL,get paddingBottomRight(){const pn=[...document.querySelectorAll('.panel')].find(e=>!e.classList.contains('hidden'));PADR[1]=(pn?pn.offsetHeight:230)+12;return PADR;}};
 // 旗やボタンに隠れない範囲にすべて入っているか
 function inView(bd){const sz=map.getSize();return L.latLngBounds(map.containerPointToLatLng(PADL),map.containerPointToLatLng([sz.x-PADR[0],sz.y-PADR[1]])).contains(bd);}
+// コースを押す（右クリック・長押しも可）と出るメニュー：詳しく見る／削除
+function routeMenu(w,ll){
+  const k=walkKcal(w);
+  const pop=L.popup({closeButton:true,autoPanPaddingTopLeft:[20,110],autoPanPaddingBottomRight:[20,40]}).setLatLng(ll)
+    .setContent(`<div class="rpop"><b>${slot(w.start)}の散歩 ${hm(w.start)}〜${hm(w.end)}</b><br>${fmtDist(w.dist)}${k?`　<span class="rk">🔥${fmtKcal(k)}</span>`:''}
+      <div class="rpbtns"><button class="op" data-rp="open">📋 詳しく見る・直す</button><button class="dl" data-rp="del">🗑 この散歩を削除</button></div></div>`).openOn(map);
+  const el=pop.getElement();
+  el.querySelector('[data-rp=open]').onclick=()=>{map.closePopup();openWalk(w.id);};
+  el.querySelector('[data-rp=del]').onclick=()=>{map.closePopup();deleteWalk(w.id,()=>{});};
+}
 function drawRoutes(ws,fit){
   routeLayer.clearLayers();const all=[];
   ws.forEach((w,i)=>{
     w.segs.forEach(s=>{if(s.length<2)return;
-      L.polyline(s,{color:'#fff',weight:14,opacity:.9}).addTo(routeLayer);
-      L.polyline(s,{color:ROUTE_COLOR,weight:9,opacity:.95}).addTo(routeLayer).on('click',()=>openWalk(w.id));
+      [L.polyline(s,{color:'#fff',weight:16,opacity:.9}),L.polyline(s,{color:ROUTE_COLOR,weight:9,opacity:.95})].forEach(pl=>{
+        pl.addTo(routeLayer).on('click contextmenu',e=>{L.DomEvent.stop(e);routeMenu(w,e.latlng);});});
       all.push(...s);});
     const pts=w.segs.flat();
     if(pts.length){
-      addFlags(routeLayer,pts,{pre:ws.length>1?'①②③④⑤⑥⑦⑧⑨⑩'[i]||'':'',st:w.start,en:w.end,onClick:()=>openWalk(w.id)});
+      addFlags(routeLayer,pts,{pre:ws.length>1?'①②③④⑤⑥⑦⑧⑨⑩'[i]||'':'',st:w.start,en:w.end,onClick:e=>routeMenu(w,(e&&e.latlng)||L.latLng(pts[pts.length-1]))});
     }
   });
   if(fit&&all.length)map.fitBounds(L.latLngBounds(all),FIT_OPT);
@@ -613,6 +678,7 @@ function updRec(){
   if(rec.mode==='gps'){$('#recDist').textContent=fmtDist(dist);
     const now=rec.paused?rec.pauseStart:Date.now();
     $('#recTime').textContent=clock(now-rec.start-(rec.pausedMs||0));
+    const pp=mainPerson(rec.walkerIds);$('#recKcal').textContent=pp?Math.round(kcalFor(pp.weight,dist,now-rec.start-(rec.pausedMs||0))):'-';
     $('#recGps').textContent=rec.acc?`±${Math.round(rec.acc)}m`:'取得中';
   }else{$('#drawDist').textContent=fmtDist(dist);$('#drawCnt').textContent=rec.segs[0].length;}
 }
@@ -730,6 +796,7 @@ function doneScreen(w,snap){
   const st2=streaks();
   openModal(`<div style="text-align:center"><div style="font-size:64px">🐕🎉</div><h2>おつかれさま！記録しました</h2>
     <p style="font-size:19px">${fmtDist(w.dist)} 歩きました<br>今日の合計 <b>${fmtDist(sumDist(walksOn(w.date)))}</b>${st2.cur>1?`<br>🔥 連続 ${st2.cur}日目！`:''}</p>
+    ${kcalCard(walkKcal(w),'今回の消費カロリー')}
     <p class="note" id="dnCount">あと 10:00 で自動的にトップへ戻ります</p></div>
     <button class="btn main big" id="dnTop" style="width:100%">🏠 トップへ戻る</button>
     <div class="row"><button class="btn" id="dnEdit">✏️ メモ・メンバー</button><button class="btn line" id="dnLine">💬 LINEで送る</button></div>
@@ -778,8 +845,9 @@ function openWalk(id){
   const w=D.walks.find(x=>x.id===id);if(!w)return;
   const dur=(w.end||w.start)-w.start,pace=w.dist>50?dur/60000/(w.dist/1000):0;
   openModal(`<h2>${slot(w.start)}の散歩 <small style="color:var(--sub);font-weight:400">${jpDateY(w.date)} ${hm(w.start)}〜${hm(w.end)}</small></h2>
-    <div class="kpis"><div class="kpi"><small>距離</small><b>${km(w.dist)}<i>km</i></b></div><div class="kpi"><small>時間</small><b>${fmtDur(dur)}</b></div>
-    <div class="kpi"><small>ペース</small><b>${pace?pace.toFixed(1):'-'}<i>分/km</i></b></div><div class="kpi"><small>記録方法</small><b style="font-size:17px">${w.mode==='gps'?'📡 GPS':'✏️ 手描き'}</b></div></div>
+    <div class="kpis"><div class="kpi"><small>距離</small><b>${km(w.dist)}<i>km</i></b></div><div class="kpi"><small>時間</small><b>${fmtDur(dur)}</b></div><div class="kpi" style="grid-column:1/3"><small>ペース（1kmあたり）</small><b>${pace?pace.toFixed(1):'-'}<i>分</i></b></div>
+</div>${kcalCard(walkKcal(w))}
+    ${w.walkerIds.map(walkerById).filter(x=>x&&x.type==='person').length>1?`<p class="note">${w.walkerIds.map(walkerById).filter(x=>x&&x.type==='person').map(p=>`${p.emoji}${esc(p.name)} 約${fmtKcal(walkKcal(w,p))}`).join('　')}</p>`:''}
     <div class="field"><label>歩いたメンバー</label>${chipEditor(w.walkerIds)}</div>
     <div class="field"><label>メモ</label><textarea id="owMemo" rows="2">${esc(w.memo)}</textarea></div>
     <div class="row"><button class="btn ghost" id="owDel">🗑 削除</button><button class="btn line" id="owLine">💬 LINE</button><button class="btn main" id="owSave">保存</button></div>`);
@@ -790,22 +858,47 @@ function openWalk(id){
   $('#owLine').onclick=()=>shareWalks([w],`${jpDateY(w.date)} ${slot(w.start)}の散歩`,walkText([w],w.date,true));
 }
 function walkRows(ws){
-  return ws.map(w=>`<div class="walkitem" style="--c:${ROUTE_COLOR}" data-id="${w.id}"><div class="m"><b>${slot(w.start)} ${hm(w.start)}〜${hm(w.end)}</b><br><small>${w.walkerIds.map(wName).map(esc).join('・')}${w.memo?'　📝'+esc(w.memo):''}</small></div><div class="d">${fmtDist(w.dist)}</div></div>`).join('');
+  return ws.map(w=>`<div class="walkitem" style="--c:${ROUTE_COLOR}" data-id="${w.id}"><div class="m"><b>${slot(w.start)} ${hm(w.start)}〜${hm(w.end)}</b><br><small>${w.walkerIds.map(wName).map(esc).join('・')}${w.memo?'　📝'+esc(w.memo):''}</small></div><div class="d">${fmtDist(w.dist)}${walkKcal(w)?`<br><small class="kcal">🔥${fmtKcal(walkKcal(w))}</small>`:''}</div><button class="trash" data-del="${w.id}" title="この記録を削除">🗑</button></div>`).join('');
 }
-function bindWalkRows(root){root.querySelectorAll('.walkitem').forEach(el=>el.onclick=()=>{const id=el.dataset.id;closeModal();openWalk(id);});}
+function deleteWalk(id,after){
+  const w=D.walks.find(x=>x.id===id);if(!w)return;
+  if(!confirm(`${jpDateY(w.date)} ${hm(w.start)}〜 の散歩（${fmtDist(w.dist)}）を削除しますか？`))return;
+  D.walks=D.walks.filter(x=>x.id!==id);save();refreshDay(false);toast('削除しました');
+  if(after)after();else if(curTab!=='map')renderTab(curTab);
+}
+function bindWalkRows(root,after){
+  root.querySelectorAll('.walkitem').forEach(el=>el.onclick=()=>{const id=el.dataset.id;closeModal();openWalk(id);});
+  root.querySelectorAll('[data-del]').forEach(b=>b.onclick=e=>{e.stopPropagation();deleteWalk(b.dataset.del,after);});
+}
+function deletePicker(){
+  const ws=[...D.walks].sort((a,b)=>b.start-a.start);
+  let h='<h2>🗑 記録を選んで削除</h2><p class="note">削除したい記録にチェックを入れて、下のボタンを押してください。</p>';
+  if(!ws.length)h+='<p class="note">記録はまだありません。</p>';
+  let last='';
+  ws.forEach(w=>{if(w.date!==last){h+=`<h3 style="margin:12px 0 4px">${jpDateY(w.date)}</h3>`;last=w.date;}
+    h+=`<label class="delrow"><input type="checkbox" value="${w.id}"><span><b>${slot(w.start)} ${hm(w.start)}〜${hm(w.end)}</b>　${fmtDist(w.dist)}<br><small>${w.walkerIds.map(wName).map(esc).join('・')}</small></span></label>`;});
+  h+=`<div class="row" style="position:sticky;bottom:0;background:#fff;padding-top:8px"><button class="btn ghost" id="dpClose">とじる</button><button class="btn stop" id="dpDel" disabled>選んだ記録を削除</button></div>`;
+  openModal(h);
+  const upd=()=>{const n=document.querySelectorAll('.delrow input:checked').length;$('#dpDel').disabled=!n;$('#dpDel').textContent=n?`選んだ ${n}件を削除`:'選んだ記録を削除';};
+  document.querySelectorAll('.delrow input').forEach(c=>c.onchange=upd);
+  $('#dpClose').onclick=closeModal;
+  $('#dpDel').onclick=()=>{const ids=[...document.querySelectorAll('.delrow input:checked')].map(c=>c.value);
+    if(!ids.length||!confirm(`${ids.length}件の記録を削除します。元に戻せません。よろしいですか？`))return;
+    D.walks=D.walks.filter(x=>!ids.includes(x.id));save();refreshDay(false);toast(`${ids.length}件削除しました`);deletePicker();if(curTab!=='map')renderTab(curTab);};
+}
 function showDayList(s){
   const ws=walksOn(s);
   openModal(`<h2>📋 ${jpDateY(s)} の散歩</h2>${ws.length?walkRows(ws):'<p class="note">この日の記録はまだありません。</p>'}
     ${ws.length?`<p style="text-align:right;font-weight:800;color:var(--main2)">合計 ${fmtDist(sumDist(ws))}（${ws.length}回）</p>`:''}
     <div class="row"><button class="btn ghost" id="dlClose">とじる</button>${ws.length?'<button class="btn line" id="dlLine">💬 LINEで送る</button>':''}</div>`);
-  bindWalkRows($('#modalBody'));$('#dlClose').onclick=closeModal;if(ws.length)$('#dlLine').onclick=()=>shareDay(s);
+  bindWalkRows($('#modalBody'),()=>showDayList(s));$('#dlClose').onclick=closeModal;if(ws.length)$('#dlLine').onclick=()=>shareDay(s);
 }
 
 /* ---------- LINE共有（画像＋文章） ---------- */
 function walkText(ws,s,single){
   const L1=[`🐾 犬も歩けば君 散歩レポート`,`📅 ${jpDateY(s)}`];
-  ws.forEach(w=>L1.push(`・${slot(w.start)} ${hm(w.start)}〜${hm(w.end)}　${km(w.dist)}km　${w.walkerIds.map(wName).join(' ')}${w.memo?`\n　📝${w.memo}`:''}`));
-  if(!single)L1.push(`合計 ${km(sumDist(ws))}km（${ws.length}回）`);
+  ws.forEach(w=>L1.push(`・${slot(w.start)} ${hm(w.start)}〜${hm(w.end)}　${km(w.dist)}km${walkKcal(w)?`　約${fmtKcal(walkKcal(w))}`:''}　${w.walkerIds.map(wName).join(' ')}${w.memo?`\n　📝${w.memo}`:''}`));
+  if(!single)L1.push(`合計 ${km(sumDist(ws))}km（${ws.length}回）${sumKcal(ws)?`　消費 約${fmtKcal(sumKcal(ws))}`:''}`);
   const [a,b]=rangeOf('week',s),[c,d]=rangeOf('month',s);
   L1.push(`今週 ${km(sumDist(walksIn(a,b)))}km ／ 今月 ${km(sumDist(walksIn(c,d)))}km`);
   const st=streaks();if(s===todayStr()&&st.cur>1)L1.push(`🔥 連続 ${st.cur}日目！`);
@@ -816,7 +909,7 @@ function shareDay(s){const ws=walksOn(s);if(!ws.length){toast('記録があり�
 let shareBlob=null;
 async function shareWalks(ws,title,text){
   shareBlob=null;
-  openModal(`<h2>💬 LINEで送る</h2><div id="shImgBox"><p class="note">画像を作成中…🐕💨</p></div>
+  openModal(`<h2>💬 LINEで送る</h2><div id="shImgBox"><p class="note">地図の画像を作成中…🐕💨（少し時間がかかります）</p></div>
     <pre class="sharetext">${esc(text)}</pre>
     <button class="btn line big" id="shBoth" style="width:100%">📷 画像＋文章をLINEで送る</button>
     <div class="row"><a class="btn line" id="shText" style="text-align:center;text-decoration:none" target="_blank" href="https://line.me/R/share?text=${encodeURIComponent(text)}">✉️ 文章だけ送る</a>
@@ -839,7 +932,23 @@ async function shareWalks(ws,title,text){
 /* 地図＋コースの画像を作る（背景：地理院タイル） */
 function lon2x(lon,z){return (lon+180)/360*256*2**z;}
 function lat2y(lat,z){const r=lat*Math.PI/180;return (1-Math.log(Math.tan(r)+1/Math.cos(r))/Math.PI)/2*256*2**z;}
-function loadImg(src,ms=6000){return new Promise(res=>{const im=new Image();im.crossOrigin='anonymous';const t=setTimeout(()=>res(null),ms);im.onload=()=>{clearTimeout(t);res(im);};im.onerror=()=>{clearTimeout(t);res(null);};im.src=src;});}
+function loadImg1(src,ms){return new Promise(res=>{const im=new Image();im.crossOrigin='anonymous';const t=setTimeout(()=>{im.src='';res(null);},ms);im.onload=()=>{clearTimeout(t);res(im);};im.onerror=()=>{clearTimeout(t);res(null);};im.src=src;});}
+// 地図タイルを確実に読む（失敗したら2回までやり直し）
+async function loadImg(src,ms=10000){for(let i=0;i<3;i++){const im=await loadImg1(i?src+(src.includes('?')?'&':'?')+'r='+i:src,ms);if(im)return im;await new Promise(r=>setTimeout(r,300*(i+1)));}return null;}
+// 同時に読む数を制限
+async function pool(items,n,fn){const out=new Array(items.length);let i=0;await Promise.all(Array.from({length:n},async()=>{while(i<items.length){const k=i++;out[k]=await fn(items[k]);}}));return out;}
+const tileUrl=(z,x,y)=>`https://cyberjapandata.gsi.go.jp/xyz/pale/${z}/${x}/${y}.png`;
+// タイルが取れない所は、1〜2段階広い範囲の地図を拡大して埋める（地図が欠けないように）
+const parentCache={};
+async function getTile(z,x,y){
+  let im=await loadImg(tileUrl(z,x,y));if(im)return{im,sx:0,sy:0,sw:256};
+  for(let up=1;up<=3;up++){const pz=z-up,px=x>>up,py=y>>up,key=pz+'/'+px+'/'+py;
+    if(!(key in parentCache))parentCache[key]=loadImg(tileUrl(pz,px,py));
+    im=await parentCache[key];
+    if(im){const n=1<<up,sw=256/n;return{im,sx:(x-(px<<up))*sw,sy:(y-(py<<up))*sw,sw};}}
+  return null;
+}
+function loadImgOld(src,ms=6000){return new Promise(res=>{const im=new Image();im.crossOrigin='anonymous';const t=setTimeout(()=>res(null),ms);im.onload=()=>{clearTimeout(t);res(im);};im.onerror=()=>{clearTimeout(t);res(null);};im.src=src;});}
 async function renderShareImage(ws,title,single){
   const W=1080,H=1350,MY=150,MH=860,cv=document.createElement('canvas');cv.width=W;cv.height=H;const g=cv.getContext('2d');
   g.fillStyle='#fff8ec';g.fillRect(0,0,W,H);
@@ -860,11 +969,10 @@ async function renderShareImage(ws,title,single){
     const sc=Math.max(1,Math.min(2,(W-360)/spx,(MH-240)/spy)); // コースを画面いっぱいに拡大
     const X=lon=>(lon2x(lon,z)-cx)*sc+W/2,Y=lat=>(lat2y(lat,z)-cy)*sc+MY+MH/2;
     const tx0=Math.floor((cx-W/2/sc)/256),tx1=Math.floor((cx+W/2/sc)/256),ty0=Math.floor((cy-MH/2/sc)/256),ty1=Math.floor((cy+MH/2/sc)/256);
-    const jobs=[];
-    for(let tx=tx0;tx<=tx1;tx++)for(let ty=ty0;ty<=ty1;ty++)jobs.push(loadImg(`https://cyberjapandata.gsi.go.jp/xyz/pale/${z}/${tx}/${ty}.png`).then(im=>({im,tx,ty})));
-    const tiles=await Promise.all(jobs);
+    const list=[];for(let tx=tx0;tx<=tx1;tx++)for(let ty=ty0;ty<=ty1;ty++)list.push([tx,ty]);
+    const tiles=await pool(list,6,async([tx,ty])=>({t:await getTile(z,tx,ty),tx,ty}));
     g.save();g.beginPath();g.rect(0,MY,W,MH);g.clip();
-    tiles.forEach(({im,tx,ty})=>{if(im)g.drawImage(im,(tx*256-cx)*sc+W/2,(ty*256-cy)*sc+MY+MH/2,256*sc+1,256*sc+1);});
+    tiles.forEach(({t,tx,ty})=>{if(t)g.drawImage(t.im,t.sx,t.sy,t.sw,t.sw,Math.floor((tx*256-cx)*sc+W/2),Math.floor((ty*256-cy)*sc+MY+MH/2),Math.ceil(256*sc)+1,Math.ceil(256*sc)+1);});
     g.lineCap='round';g.lineJoin='round';
     ws.forEach(w=>w.segs.forEach(sg=>{if(sg.length<2)return;
       [[24,'#fff'],[15,ROUTE_COLOR]].forEach(([lw,c])=>{g.strokeStyle=c;g.lineWidth=lw;g.beginPath();sg.forEach((p,i)=>i?g.lineTo(X(p[1]),Y(p[0])):g.moveTo(X(p[1]),Y(p[0])));g.stroke();});}));
@@ -883,11 +991,12 @@ async function renderShareImage(ws,title,single){
   g.fillStyle='#2b2118';g.font='bold 30px sans-serif';g.fillText('きょりの合計',40,MY+MH+48);
   g.fillStyle='#d97706';g.font='bold 110px sans-serif';g.fillText(km(tot),40,MY+MH+140);
   const kw=g.measureText(km(tot)).width;g.font='bold 44px sans-serif';g.fillText('km',52+kw,MY+MH+160);
+  const kc=sumKcal(ws);if(kc){g.fillStyle='#ea580c';g.font='bold 40px sans-serif';g.fillText(`🔥 約 ${fmtKcal(kc)}`,40,MY+MH+225);}
   g.fillStyle='#2b2118';g.font='bold 34px sans-serif';
   g.fillText(`🐾 ${ws.length}回　⏱ ${fmtDur(dur)}`,560,MY+MH+80);
   const names=[...new Set(ws.flatMap(w=>w.walkerIds))].map(wName).join(' ');
   g.font='30px sans-serif';wrapText(g,names,560,MY+MH+135,480,40);
-  const st=streaks();if(st.cur>1){g.fillStyle='#dc2626';g.font='bold 30px sans-serif';g.fillText(`🔥 連続 ${st.cur}日`,560,MY+MH+225);}
+  const st=streaks();if(st.cur>1){g.fillStyle='#dc2626';g.font='bold 30px sans-serif';g.fillText(`連続 ${st.cur}日目`,560,MY+MH+225);}
   g.fillStyle='#9a8f84';g.font='20px sans-serif';g.fillText('背景地図：地理院タイル（国土地理院）',40,H-24);
   return cv;
 }
@@ -905,7 +1014,7 @@ function renderCal(){
   for(let d=1;d<=days;d++){
     const s=`${y}-${pad(m+1)}-${pad(d)}`,ws=walksOn(s),dist=sumDist(ws);
     const cls=ws.length?'walk':(s<td?'miss':'');
-    h+=`<div class="cell ${cls} ${s===td?'today':''} ${s===calSel?'sel':''}" data-d="${s}"><span class="n">${d}</span><span class="p">${ws.length?(ws.length>1?'🐾🐾':'🐾'):(s<td?'😢':'')}</span>${ws.length?`<span class="k">${(dist/1000).toFixed(1)}km</span>`:''}</div>`;
+    h+=`<div class="cell ${cls} ${s===td?'today':''} ${s===calSel?'sel':''}" data-d="${s}"><span class="n">${d}</span><span class="p">${ws.length?(ws.length>1?'🐾🐾':'🐾'):(s<td?'😢':'')}</span>${ws.length?`<span class="k">${(dist/1000).toFixed(1)}km</span>${sumKcal(ws)?`<span class="k" style="color:#ea580c">${Math.round(sumKcal(ws))}kcal</span>`:''}`:''}</div>`;
   }
   h+='</div></div>';$('#calBox').innerHTML=h;
   $('#calBox').querySelectorAll('[data-cm]').forEach(bt=>bt.onclick=()=>{calM.setMonth(calM.getMonth()+ +bt.dataset.cm);renderCal();});
@@ -962,7 +1071,7 @@ function markCell(s,td,big){
   return `<div class="mcell ${s===td?'today':''} ${s>td?'future':''}" data-go="${s}">
     <span class="mn" style="color:${dow===0?'#dc2626':dow===6?'#2563eb':'inherit'}">${big?`${d.getMonth()+1}/${d.getDate()}`:d.getDate()}</span>
     <span class="mk">${mark}</span>
-    <span class="mkm">${ws.length?(dist/1000).toFixed(1)+'km'+(ws.length>1?`<br>${ws.length}回`:''):''}</span></div>`;
+    <span class="mkm">${ws.length?(dist/1000).toFixed(1)+'km'+(ws.length>1?`<br>${ws.length}回`:''):''}</span>${ws.length&&sumKcal(ws)?`<span class="mkc">${Math.round(sumKcal(ws))}kcal</span>`:''}</div>`;
 }
 function statCalendar(a,b,td){
   if(statMode==='week'){
@@ -984,7 +1093,8 @@ function renderStat(){
   let vals=[],labels=[],hi=-1;
   if(statMode==='year'){const y=+a.slice(0,4);for(let m=0;m<12;m++){const[p,q]=rangeOf('month',ymd(new Date(y,m,1)));vals.push(sumDist(walksIn(p,q))/1000);labels.push(m+1+'月');if(td>=p&&td<=q)hi=m;}}
   else{let i=0;for(let s=a;s<=b;s=addDays(s,1),i++){vals.push(sumDist(walksOn(s))/1000);const d=parseYmd(s);labels.push(statMode==='week'?WD[d.getDay()]:String(d.getDate()));if(s===td)hi=i;}}
-  const per=D.walkers.map(w=>{const x=ws.filter(k=>k.walkerIds.includes(w.id));return{w,dist:sumDist(x),n:x.length};}).filter(p=>p.n);
+  const per=D.walkers.map(w=>{const x=ws.filter(k=>k.walkerIds.includes(w.id));return{w,dist:sumDist(x),n:x.length,kc:w.type==='person'?x.reduce((t,k)=>t+walkKcal(k,w),0):0};}).filter(p=>p.n);
+  const kcTot=sumKcal(ws);
   const pmax=Math.max(1,...per.map(p=>p.dist));const st=streaks();
   $('#statBox').innerHTML=`<div class="seg">${[['week','週'],['month','月'],['year','年']].map(([k,l])=>`<button data-sm="${k}" class="${statMode===k?'on':''}">${l}</button>`).join('')}</div>
     <div class="calhead"><button class="iconbtn" data-sh="-1">◀</button><b>${periodLabel(statMode,a,b)}</b><button class="iconbtn" data-sh="1" ${b>=td?'disabled':''}>▶</button></div>
@@ -993,12 +1103,13 @@ function renderStat(){
       <div class="kpi"><small>散歩回数</small><b>${ws.length}<i>回</i></b></div>
       <div class="kpi"><small>歩いた日</small><b>${days}<i>/ ${totalDays}日</i></b></div>
       <div class="kpi" style="grid-column:1/3"><small>1日平均（歩いた日）</small><b>${days?km(tot/days):'0.00'}<i>km</i></b></div>
-    </div>
+    </div>${kcalCard(kcTot,'この期間の消費カロリー')}
     <div class="card" style="margin-top:10px">${barChart(vals,labels,hi)}</div>`
     :`<div class="ksum"><div><small>合計きょり</small><b>${km(tot)}<i>km</i></b></div><div><small>散歩回数</small><b>${ws.length}<i>回</i></b></div><div><small>歩いた日</small><b>${days}<i>/${totalDays}日</i></b></div></div>
+    ${kcalCard(kcTot,'この期間の消費カロリー')}
     <div class="card" style="padding:8px">${statCalendar(a,b,td)}
       <p class="note" style="margin:6px 0 0;text-align:center">花丸＝散歩した日　✕＝しなかった日</p></div>`}
-    <h3>メンバー別</h3><div class="card">${per.length?per.map(p=>`<div class="wbar"><span class="nm">${p.w.emoji}${esc(p.w.name)}</span><span class="tr"><div style="width:${p.dist/pmax*100}%;background:${p.w.color}"></div></span><span class="v">${km(p.dist)}km<small style="color:var(--sub)"> ${p.n}回</small></span></div>`).join(''):'<p class="note">この期間の記録はありません</p>'}</div>
+    <h3>メンバー別</h3><div class="card">${per.length?per.map(p=>`<div class="wbar"><span class="nm">${p.w.emoji}${esc(p.w.name)}</span><span class="tr"><div style="width:${p.dist/pmax*100}%;background:${p.w.color}"></div></span><span class="v">${km(p.dist)}km<small style="color:var(--sub)"> ${p.n}回</small>${p.kc?`<br><small class="kcal">${fmtKcal(p.kc)}</small>`:''}</span></div>`).join(''):'<p class="note">この期間の記録はありません</p>'}</div>
     <h3>連続記録</h3><div class="kpis"><div class="kpi"><small>いまの連続</small><b>🔥${st.cur}<i>日</i></b></div><div class="kpi"><small>最長の連続</small><b>🏆${st.max}<i>日</i></b></div></div>
     <div class="row" style="margin-top:12px"><button class="btn line big" id="stLine" ${ws.length?'':'disabled'}>💬 この集計をLINEで送る</button></div>`;
   $('#statBox').querySelectorAll('[data-sm]').forEach(bt=>bt.onclick=()=>{statMode=bt.dataset.sm;statAnchor=todayStr();renderStat();});
@@ -1006,7 +1117,7 @@ function renderStat(){
   $('#statBox').querySelectorAll('[data-sh]').forEach(bt=>bt.onclick=()=>{shiftAnchor(+bt.dataset.sh);renderStat();});
   $('#stLine').onclick=()=>{
     const lbl=periodLabel(statMode,a,b);
-    const t=[`🐾 犬も歩けば君 ${statMode==='week'?'週間':statMode==='month'?'月間':'年間'}レポート`,`📅 ${lbl}`,`合計 ${km(tot)}km（${ws.length}回・${days}日）`,`1日平均 ${days?km(tot/days):'0.00'}km`,...per.map(p=>`${p.w.emoji}${p.w.name} ${km(p.dist)}km`),st.cur>1?`🔥 連続 ${st.cur}日`:''].filter(Boolean).join('\n');
+    const t=[`🐾 犬も歩けば君 ${statMode==='week'?'週間':statMode==='month'?'月間':'年間'}レポート`,`📅 ${lbl}`,`合計 ${km(tot)}km（${ws.length}回・${days}日）`,`1日平均 ${days?km(tot/days):'0.00'}km`,kcTot?`消費カロリー 約${fmtKcal(kcTot)}`:'',...per.map(p=>`${p.w.emoji}${p.w.name} ${km(p.dist)}km`),st.cur>1?`🔥 連続 ${st.cur}日`:''].filter(Boolean).join('\n');
     shareWalks(ws,lbl+' のコース',t);
   };
 }
@@ -1014,7 +1125,7 @@ function renderStat(){
 /* ---------- メンバー・設定 ---------- */
 function renderSet(){
   $('#setBox').innerHTML=`<h2>🐕 メンバー（犬・人）</h2>
-    ${D.walkers.map(w=>`<div class="member"><span style="font-size:24px">${w.emoji}</span><span class="nm">${esc(w.name)} <small style="color:var(--sub);font-weight:400">${w.type==='dog'?'犬':'人'}</small></span><span class="sw" style="background:${w.color}"></span><button class="iconbtn" data-ew="${w.id}">編集</button></div>`).join('')}
+    ${D.walkers.map(w=>`<div class="member"><span style="font-size:24px">${w.emoji}</span><span class="nm">${esc(w.name)} <small style="color:var(--sub);font-weight:400">${w.type==='dog'?'犬':'人・'+(w.weight||60)+'kg'}</small></span><span class="sw" style="background:${w.color}"></span><button class="iconbtn" data-ew="${w.id}">編集</button></div>`).join('')}
     <div class="row"><button class="btn main" id="addW">＋ メンバーを追加</button></div>
     <h2 style="margin-top:22px">🎵 音楽</h2>
     <div class="card">
@@ -1030,7 +1141,8 @@ function renderSet(){
     <div class="card">
       <p class="note">記録はこのスマホのブラウザ内に保存されています。機種変更やブラウザのデータ削除に備えて、ときどきバックアップしてください。（記録数：${D.walks.length}件）</p>
       <div class="row"><button class="btn" id="bkSave">⬇ バックアップ保存</button><button class="btn" id="bkLoad">⬆ バックアップ読込</button></div>
-      <div class="row"><button class="btn" id="csvSave">📄 CSV（Excel用）</button><button class="btn ghost" id="allDel" style="color:#dc2626">全データ削除</button></div>
+      <div class="row"><button class="btn" id="csvSave">📄 CSV（Excel用）</button><button class="btn" id="pickDel">🗑 選んで削除</button></div>
+      <div class="row"><button class="btn ghost" id="allDel" style="color:#dc2626">全データ削除</button></div>
       <input type="file" id="bkFile" accept=".json,application/json" class="hidden">
     </div>
     <h2 style="margin-top:22px">❓ 使い方</h2>
@@ -1055,11 +1167,12 @@ function renderSet(){
     D={walkers:d.walkers||[],walks:d.walks,settings:Object.assign(defaultData().settings,d.settings||{})};save();selWalkers=new Set(D.settings.lastWalkers);renderChips();refreshDay(true);renderSet();toast('読み込みました');}
     catch(err){toast('読み込めないファイルです');}};
   $('#csvSave').onclick=()=>{
-    const rows=[['日付','曜日','開始','終了','時間(分)','距離(km)','メンバー','メモ','記録方法']];
-    [...D.walks].sort((a,b)=>a.start-b.start).forEach(w=>rows.push([w.date,WD[parseYmd(w.date).getDay()],hm(w.start),hm(w.end),Math.round((w.end-w.start)/60000),km(w.dist),w.walkerIds.map(id=>(walkerById(id)||{name:'削除済み'}).name).join('・'),w.memo||'',w.mode==='gps'?'GPS':'手描き']));
+    const rows=[['日付','曜日','開始','終了','時間(分)','距離(km)','消費カロリー(kcal)','メンバー','メモ','記録方法']];
+    [...D.walks].sort((a,b)=>a.start-b.start).forEach(w=>rows.push([w.date,WD[parseYmd(w.date).getDay()],hm(w.start),hm(w.end),Math.round((w.end-w.start)/60000),km(w.dist),Math.round(walkKcal(w))||'',w.walkerIds.map(id=>(walkerById(id)||{name:'削除済み'}).name).join('・'),w.memo||'',w.mode==='gps'?'GPS':'手描き']));
     const csv='﻿'+rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\r\n');
     download(new Blob([csv],{type:'text/csv'}),`犬も歩けば君_${todayStr()}.csv`);
   };
+  $('#pickDel').onclick=deletePicker;
   $('#allDel').onclick=()=>{if(confirm('すべての散歩記録とメンバーを削除します。元に戻せません。よろしいですか？')&&confirm('本当に削除しますか？')){D=defaultData();save();selWalkers=new Set(D.settings.lastWalkers);renderChips();refreshDay(true);renderSet();toast('削除しました');}};
 }
 function download(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();}
@@ -1068,15 +1181,17 @@ function editWalker(id){
   openModal(`<h2>${id?'メンバーを編集':'メンバーを追加'}</h2>
     <div class="field"><label>名前</label><input id="ewName" value="${esc(w.name)}" placeholder="例）ポチ"></div>
     <div class="field"><label>種類</label><div class="seg" id="ewType"><button type="button" data-t="dog" class="${w.type==='dog'?'on':''}">🐕 犬</button><button type="button" data-t="person" class="${w.type==='person'?'on':''}">🚶 人</button></div></div>
+    <div class="field" id="ewWtBox"><label>体重（kg）※消費カロリーの計算に使います</label><input type="number" id="ewWt" min="10" max="200" step="0.5" value="${w.weight||60}" inputmode="decimal"></div>
     <div class="field"><label>アイコン</label><div class="chips" id="ewEmoji">${EMOJIS.map(e=>`<button type="button" class="chip ${e===w.emoji?'on':''}" data-e="${e}" style="font-size:20px;padding:4px 9px">${e}</button>`).join('')}</div></div>
     <div class="field"><label>色（メンバーの印の色）</label>${palette(w.color,'ewPal')}</div>
     <div class="row">${id?'<button class="btn ghost" id="ewDel" style="color:#dc2626">削除</button>':''}<button class="btn ghost" id="ewCancel">やめる</button><button class="btn main" id="ewSave">保存</button></div>`);
   bindPalette('ewPal');
-  $('#ewType').querySelectorAll('button').forEach(b=>b.onclick=()=>{$('#ewType').querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on');});
+  const updWt=()=>$('#ewWtBox').classList.toggle('hidden',$('#ewType .on').dataset.t!=='person');updWt();
+  $('#ewType').querySelectorAll('button').forEach(b=>b.onclick=()=>{$('#ewType').querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on');updWt();});
   $('#ewEmoji').querySelectorAll('button').forEach(b=>b.onclick=()=>{$('#ewEmoji').querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on');});
   $('#ewCancel').onclick=closeModal;
   $('#ewSave').onclick=()=>{const name=$('#ewName').value.trim();if(!name){toast('名前を入れてください');return;}
-    const o={name,type:$('#ewType .on').dataset.t,emoji:($('#ewEmoji .on')||{dataset:{e:'🐕'}}).dataset.e,color:readPalette('ewPal')};
+    const o={name,type:$('#ewType .on').dataset.t,emoji:($('#ewEmoji .on')||{dataset:{e:'🐕'}}).dataset.e,color:readPalette('ewPal'),weight:Math.max(10,+$('#ewWt').value||60)};
     if(id)Object.assign(w,o);else{const nw={id:uid(),...o};D.walkers.push(nw);selWalkers.add(nw.id);D.settings.lastWalkers=[...selWalkers];}
     save();closeModal();renderChips();renderSet();};
   if(id)$('#ewDel').onclick=()=>{if(!confirm(`「${w.name}」を削除しますか？（散歩記録は残ります）`))return;D.walkers=D.walkers.filter(x=>x.id!==id);selWalkers.delete(id);D.settings.lastWalkers=[...selWalkers];save();closeModal();renderChips();renderSet();};
